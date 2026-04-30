@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>アイドル全国 — Idol JP Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Zen+Maru+Gothic:wght@500;700;900&family=DotGothic16&family=Inter:wght@400;500;700;900&family=Reggae+One&family=Yusei+Magic&family=RocknRoll+One&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="styles.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="data.js"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="japan-map.jsx"></script>
+<script type="text/babel" src="components.jsx"></script>
+</head>
+<body data-theme="light" data-anim="on">
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useMemo, useRef } = React;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "fontDisplay": "Bagel Fat One",
+  "fontJp": "Zen Maru Gothic",
+  "primary": "#ff3ea5",
+  "accent": "#fff200",
+  "accent2": "#22d3ee",
+  "cardStyle": "tilted",
+  "animations": true,
+  "dark": false
+}/*EDITMODE-END*/;
+
+const FONT_DISPLAY_OPTIONS = ['Bagel Fat One','Reggae One','RocknRoll One','Yusei Magic'];
+const FONT_JP_OPTIONS = ['Zen Maru Gothic','Reggae One','RocknRoll One','Yusei Magic'];
+
+function App() {
+  const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  const [view, setView] = useState('map'); // map | calendar | feed | groups
+  const [hoveredCity, setHoveredCity] = useState(null);
+  const [pickedEventId, setPickedEventId] = useState(null);
+  const [favs, setFavs] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('idol_favs')||'[]'); } catch { return []; }
+  });
+  const [followed, setFollowed] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('idol_follows')||'["keni-boys"]'); } catch { return ['keni-boys']; }
+  });
+  const [search, setSearch] = useState('');
+  const [filterCity, setFilterCity] = useState('all');
+  const [filterKind, setFilterKind] = useState('all');
+  const [filterGroup, setFilterGroup] = useState('all');
+  const [favsOnly, setFavsOnly] = useState(false);
+  const [calMonth, setCalMonth] = useState(4); // mai
+  const [calYear, setCalYear] = useState(2026);
+
+  // Apply tweaks live
+  useEffect(() => {
+    document.body.dataset.theme = t.dark ? 'dark' : 'light';
+    document.body.dataset.anim = t.animations ? 'on' : 'off';
+    document.documentElement.style.setProperty('--pink', t.primary);
+    document.documentElement.style.setProperty('--yellow', t.accent);
+    document.documentElement.style.setProperty('--cyan', t.accent2);
+  }, [t]);
+
+  // Inject font overrides
+  useEffect(() => {
+    let s = document.getElementById('font-overrides');
+    if (!s) { s = document.createElement('style'); s.id = 'font-overrides'; document.head.appendChild(s); }
+    s.textContent = `.font-display{font-family:'${t.fontDisplay}',system-ui!important}
+                     .font-jp{font-family:'${t.fontJp}',system-ui!important}`;
+  }, [t.fontDisplay, t.fontJp]);
+
+  useEffect(() => { localStorage.setItem('idol_favs', JSON.stringify(favs)); }, [favs]);
+  useEffect(() => { localStorage.setItem('idol_follows', JSON.stringify(followed)); }, [followed]);
+
+  const toggleFav = (id) => setFavs(f => f.includes(id) ? f.filter(x=>x!==id) : [...f, id]);
+  const toggleFollow = (id) => setFollowed(f => f.includes(id) ? f.filter(x=>x!==id) : [...f, id]);
+
+  const filtered = useMemo(() => {
+    return EVENTS.filter(ev => {
+      const v = ev.venue ? VENUES[ev.venue] : null;
+      const g = IDOL_GROUPS.find(x => x.id === ev.group);
+      if (!g) return false;
+      if (filterCity !== 'all' && (!v || v.city !== filterCity)) return false;
+      if (filterKind !== 'all' && ev.kind !== filterKind) return false;
+      if (filterGroup !== 'all' && ev.group !== filterGroup) return false;
+      if (favsOnly && !favs.includes(ev.id)) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        if (!(g.name.toLowerCase().includes(s) || g.nameJp.includes(search) ||
+              ev.title.toLowerCase().includes(s) || v.name.toLowerCase().includes(s) ||
+              CITIES[v.city].name.toLowerCase().includes(s))) return false;
+      }
+      return true;
+    }).sort((a,b) => new Date(a.date) - new Date(b.date));
+  }, [search, filterCity, filterKind, filterGroup, favsOnly, favs]);
+
+  const pickedEv = pickedEventId ? EVENTS.find(e => e.id === pickedEventId) : null;
+  const pickedGroup = pickedEv ? IDOL_GROUPS.find(g => g.id === pickedEv.group) : null;
+  const pickedVenue = pickedEv ? VENUES[pickedEv.venue] : null;
+  const pickedCity = pickedVenue ? CITIES[pickedVenue.city] : null;
+
+  // Pick city -> show events for that city
+  const onPickCity = (cid) => { setView('feed'); setFilterCity(cid); };
+
+  // Featured: KENI BOYS next event
+  const keniNext = useMemo(() => {
+    return EVENTS
+      .filter(e => e.group === 'keni-boys' && new Date(e.date) > new Date())
+      .sort((a,b) => new Date(a.date)-new Date(b.date))[0];
+  }, []);
+  const keniGroup = IDOL_GROUPS.find(g => g.id === 'keni-boys');
+  const keniVenue = keniNext && VENUES[keniNext.venue];
+  const keniCity = keniVenue && CITIES[keniVenue.city];
+
+  return (
+    <div style={{minHeight:'100vh'}}>
+      {/* Marquee top */}
+      <div className={`marquee ${t.animations?'':'no-anim'}`}>
+        <div className="marquee-track">
+          ★ アイドル全国カレンダー ★ IDOL JP CALENDAR ★ {EVENTS.length} CONCERTS ★ {IDOL_GROUPS.length} GROUPES ★ MAI〜AOÛT 2026 ★ MISE À JOUR EN DIRECT ★ KENI BOYS BUDOKAN — SOLD OUT ★ NOGIZAKA46 — TOKYO DOME ★ BABYMETAL — WORLD TOUR ★&nbsp;&nbsp;
+          ★ アイドル全国カレンダー ★ IDOL JP CALENDAR ★ {EVENTS.length} CONCERTS ★ {IDOL_GROUPS.length} GROUPES ★ MAI〜AOÛT 2026 ★ MISE À JOUR EN DIRECT ★ KENI BOYS BUDOKAN — SOLD OUT ★ NOGIZAKA46 — TOKYO DOME ★ BABYMETAL — WORLD TOUR ★&nbsp;&nbsp;
+        </div>
+      </div>
+
+      {/* Header */}
+      <header className="app-header" style={{padding:'18px 24px'}}>
+        <div style={{display:'flex', alignItems:'center', gap:18, flexWrap:'wrap', justifyContent:'space-between'}}>
+          <div style={{display:'flex', alignItems:'center', gap:14}}>
+            <div className={`logo-blob ${t.animations?'wiggle':''}`} style={{position:'relative'}}>
+              <div style={{
+                background: 'var(--pink)', color:'#fff', border:'3px solid var(--ink)',
+                padding:'6px 14px', fontFamily:'Bagel Fat One, system-ui', fontSize: 28, lineHeight:1,
+                borderRadius: 10, transform:'rotate(-3deg)', boxShadow:'4px 4px 0 var(--ink)'
+              }} className="font-display">アイドル</div>
+              <div style={{
+                background: 'var(--yellow)', color:'var(--ink)', border:'3px solid var(--ink)',
+                padding:'6px 14px', fontFamily:'Bagel Fat One, system-ui', fontSize: 28, lineHeight:1,
+                borderRadius: 10, transform:'rotate(2deg)', boxShadow:'4px 4px 0 var(--ink)',
+                marginLeft: -6
+              }} className="font-display">JP CAL</div>
+            </div>
+            <div className="font-mono" style={{fontSize:11, opacity:.7, maxWidth:240, lineHeight:1.4}}>
+              // suivez les groupes d'idoles japonaises<br/>
+              // 全国アイドルライブカレンダー
+            </div>
+          </div>
+
+          {/* Search */}
+          <div style={{display:'flex', gap:8, alignItems:'center', flex: '1 1 320px', minWidth: 280, maxWidth: 480, position:'relative'}}>
+            <span style={{position:'absolute', left: 12, top: '50%', transform:'translateY(-50%)', fontSize:18, zIndex:1, pointerEvents:'none'}}>🔍</span>
+            <input
+              value={search}
+              onChange={e=>setSearch(e.target.value)}
+              placeholder="検索 / Recherche groupe, lieu, ville..."
+              style={{
+                flex:1, padding:'12px 16px 12px 38px', border:'3px solid var(--ink)', borderRadius:10,
+                fontFamily:'Inter', fontSize:14, background:'#fff',
+                boxShadow:'4px 4px 0 var(--ink)', outline:'none', color:'var(--ink)'
+              }}
+            />
+          </div>
+
+          <div style={{display:'flex', gap:8, alignItems:'center'}}>
+            <button className={`btn sm ${favsOnly?'pink':''}`} onClick={()=>setFavsOnly(v=>!v)}>
+              {favsOnly?'💖':'🤍'} Favoris ({favs.length})
+            </button>
+            <button className="btn sm yellow" onClick={()=>setTweak('dark', !t.dark)}>
+              {t.dark?'☀️':'🌙'}
+            </button>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="tabs" style={{marginTop:18}}>
+          <button className={`tab ${view==='map'?'active':''}`} onClick={()=>setView('map')}>🗾 MAP / 地図</button>
+          <button className={`tab ${view==='calendar'?'active':''}`} onClick={()=>setView('calendar')}>📅 CAL / カレンダー</button>
+          <button className={`tab ${view==='feed'?'active':''}`} onClick={()=>setView('feed')}>📰 FEED / 一覧</button>
+          <button className={`tab ${view==='groups'?'active':''}`} onClick={()=>setView('groups')}>💗 GROUPES / グループ</button>
+        </div>
+      </header>
+
+      <main style={{padding:'24px', maxWidth: 1400, margin:'0 auto'}}>
+
+        {/* Featured KENI BOYS banner */}
+        {keniNext && (
+          <div className="card" style={{
+            padding: 18, marginBottom: 22,
+            background: `linear-gradient(105deg, ${keniGroup.color} 0%, ${keniGroup.color2} 100%)`,
+            position:'relative', overflow:'hidden'
+          }}>
+            <div className="washi pink" style={{top:-14, left:30, transform:'rotate(-3deg)'}}/>
+            <div className="washi cyan" style={{top:-14, right:80, transform:'rotate(4deg)'}}/>
+            <div className="sparkle" style={{top:8, right:14, fontSize:32}}>★</div>
+            <div className="sparkle" style={{bottom:14, left:'40%', fontSize:24}}>✦</div>
+            <div style={{display:'flex', gap:18, alignItems:'center', flexWrap:'wrap'}}>
+              <div style={{flex:'1 1 280px'}}>
+                <span className="sticker pink">★ FEATURED</span>{' '}
+                <span className="sticker yellow">FICTIF / 架空</span>
+                <div className="font-jp" style={{fontSize:30, color:'#fff', WebkitTextStroke:'2px var(--ink)', marginTop:6, lineHeight:1}}>
+                  {keniGroup.nameJp}
+                </div>
+                <div className="font-display" style={{fontSize:46, color:'#fff', WebkitTextStroke:'2px var(--ink)', lineHeight:1}}>
+                  {keniGroup.name}
+                </div>
+                <div style={{marginTop:8, fontSize:14, color:'var(--ink)', maxWidth: 460}}>
+                  {keniGroup.bioFr}
+                </div>
+              </div>
+              <div className="card" style={{padding:14, background:'#fff', minWidth: 280}}>
+                <div className="font-mono" style={{fontSize:10, opacity:.6}}>// PROCHAIN CONCERT</div>
+                <div className="font-display" style={{fontSize:18}}>{keniNext.title}</div>
+                <div className="font-mono" style={{fontSize:11}}>
+                  {keniVenue.name} · {keniCity.name}
+                </div>
+                <div style={{marginTop:8}}>
+                  <Countdown iso={keniNext.date} big/>
+                </div>
+                <button className="btn pink sm" style={{marginTop:10}} onClick={()=>setPickedEventId(keniNext.id)}>
+                  詳細 / Détails →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Filters */}
+        {(view==='feed' || view==='map') && (
+          <div style={{display:'flex', gap:8, marginBottom:18, flexWrap:'wrap', alignItems:'center'}}>
+            <span className="font-mono" style={{fontSize:11, opacity:.6}}>// FILTRES:</span>
+            <select className="btn sm" value={filterCity} onChange={e=>setFilterCity(e.target.value)}>
+              <option value="all">📍 Toutes villes</option>
+              {Object.entries(CITIES).map(([k,c])=>(
+                <option key={k} value={k}>{c.name} ({c.nameJp})</option>
+              ))}
+            </select>
+            <select className="btn sm" value={filterKind} onChange={e=>setFilterKind(e.target.value)}>
+              <option value="all">🎤 Tous types</option>
+              <option value="LIVE">CONCERT</option>
+              <option value="THEATER">THÉÂTRE</option>
+              <option value="FANMEET">FAN MEET</option>
+              <option value="FESTIVAL">FESTIVAL</option>
+              <option value="OVERSEAS">HORS JAPON</option>
+            </select>
+            <select className="btn sm" value={filterGroup} onChange={e=>setFilterGroup(e.target.value)}>
+              <option value="all">★ Tous groupes</option>
+              {IDOL_GROUPS.map(g=>(
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))}
+            </select>
+            {(filterCity!=='all'||filterKind!=='all'||filterGroup!=='all'||search) && (
+              <button className="btn sm yellow" onClick={()=>{
+                setFilterCity('all'); setFilterKind('all'); setFilterGroup('all'); setSearch('');
+              }}>✕ Reset</button>
+            )}
+            <span style={{flex:1}}/>
+            <span className="sticker">{filtered.length} résultats</span>
+          </div>
+        )}
+
+        {/* Views */}
+        {view === 'map' && (
+          <div style={{display:'grid', gridTemplateColumns:'minmax(0, 1fr) 320px', gap:20}} className="map-grid">
+            <div className="card" style={{padding:8, position:'relative', minHeight: 600}}>
+              <JapanMap
+                events={filtered}
+                groups={IDOL_GROUPS}
+                venues={VENUES}
+                cities={CITIES}
+                onPick={onPickCity}
+                hoveredCity={hoveredCity}
+                setHoveredCity={setHoveredCity}
+                animations={t.animations}
+              />
+            </div>
+            <div style={{display:'flex', flexDirection:'column', gap:14, minWidth:0}}>
+              <div className="card" style={{padding:14}}>
+                <div className="font-display" style={{fontSize:22}}>★ TOP 5 / 注目</div>
+                <div className="font-mono" style={{fontSize:10, opacity:.6, marginBottom:10}}>// les plus chauds du moment</div>
+                <div style={{display:'flex', flexDirection:'column', gap:8}}>
+                  {filtered.filter(e => e.sold!=null && e.sold>=0.85).slice(0,5).map(ev => {
+                    const g = IDOL_GROUPS.find(x=>x.id===ev.group);
+                    const v = ev.venue ? VENUES[ev.venue] : null;
+                    const c = v ? CITIES[v.city] : null;
+                    const f = fmtDate(ev.date);
+                    return (
+                      <div key={ev.id} className="event-row"
+                        onClick={()=>setPickedEventId(ev.id)}
+                        style={{display:'flex', gap:10, padding:'8px', border:'2px solid var(--ink)', borderRadius:8, cursor:'pointer', background: g.color2}}>
+                        <div style={{width:6, alignSelf:'stretch', background:g.color, borderRadius:2}}/>
+                        <div style={{flex:1, minWidth:0}}>
+                          <div className="font-display" style={{fontSize:13, lineHeight:1.1}}>{g.name}</div>
+                          <div className="font-mono" style={{fontSize:10}}>{f.day}/{f.m+1} · {c ? c.name : (ev.overseas || '—')}</div>
+                        </div>
+                        <span className={`status-dot status-${ev.sold!=null && ev.sold>=1?'SOLDOUT':ev.status}`} style={{alignSelf:'center'}}/>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="card" style={{padding:14, background:'var(--yellow)'}}>
+                <div className="font-display" style={{fontSize:18}}>📊 STATS</div>
+                <div className="font-mono" style={{fontSize:11, marginTop:8, lineHeight:1.7}}>
+                  ▸ {EVENTS.length} concerts<br/>
+                  ▸ {IDOL_GROUPS.length} groupes<br/>
+                  ▸ {Object.keys(CITIES).length} villes<br/>
+                  ▸ {EVENTS.filter(e=>e.sold!=null && e.sold>=1).length} sold-out<br/>
+                  ▸ {favs.length} ❤︎ favoris<br/>
+                  ▸ {followed.length} ★ suivis
+                </div>
+              </div>
+
+              <div className="card" style={{padding:14, transform:'rotate(-1deg)'}}>
+                <div className="font-display" style={{fontSize:16}}>HOW TO USE</div>
+                <ol className="font-mono" style={{fontSize:11, paddingLeft:16, lineHeight:1.6}}>
+                  <li>Clique un pin → événements de la ville</li>
+                  <li>Filtre par groupe ou date</li>
+                  <li>Mets en ★ favori, exporte en .ics</li>
+                  <li>Active <b>Tweaks</b> pour customiser</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view === 'calendar' && (
+          <div style={{display:'grid', gridTemplateColumns:'minmax(0, 1fr) 320px', gap:20}} className="map-grid">
+            <MonthCalendar
+              events={EVENTS} groups={IDOL_GROUPS} venues={VENUES} cities={CITIES}
+              year={calYear} month={calMonth}
+              setMonth={setCalMonth} setYear={setCalYear}
+              onPickEvent={setPickedEventId}
+              animations={t.animations}
+            />
+            <div className="card" style={{padding:14, alignSelf:'flex-start'}}>
+              <div className="font-display" style={{fontSize:18}}>LÉGENDE</div>
+              <div style={{marginTop:10, display:'flex', flexDirection:'column', gap:6}}>
+                {IDOL_GROUPS.map(g => (
+                  <div key={g.id} style={{display:'flex', gap:8, alignItems:'center', fontSize:12}}>
+                    <div style={{width:14, height:14, background:g.color, border:'2px solid var(--ink)', borderRadius:3}}/>
+                    <span className="font-jp" style={{fontSize:11, opacity:.7}}>{g.nameJp}</span>
+                    <span style={{flex:1}}/>
+                    <button className="fav-btn" style={{fontSize:14}} onClick={()=>toggleFollow(g.id)}>
+                      {followed.includes(g.id)?'★':'☆'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {view === 'feed' && (
+          <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(340px, 1fr))', gap: 18}}>
+            {filtered.length === 0 && (
+              <div className="card" style={{padding:30, textAlign:'center', gridColumn:'1 / -1'}}>
+                <div className="font-display" style={{fontSize:40}}>(╥﹏╥)</div>
+                <div className="font-jp" style={{fontSize:18, marginTop:6}}>結果なし</div>
+                <div className="font-mono" style={{fontSize:11, marginTop:4, opacity:.6}}>// aucun résultat avec ces filtres</div>
+              </div>
+            )}
+            {filtered.map(ev => {
+              const g = IDOL_GROUPS.find(x=>x.id===ev.group);
+              const v = ev.venue ? VENUES[ev.venue] : null;
+              const c = v ? CITIES[v.city] : null;
+              return (
+                <EventCard key={ev.id} ev={ev} group={g} venue={v} city={c}
+                  onClick={()=>setPickedEventId(ev.id)}
+                  isFav={favs.includes(ev.id)}
+                  onFav={()=>toggleFav(ev.id)}
+                  cardStyle={t.cardStyle}/>
+              );
+            })}
+          </div>
+        )}
+
+        {view === 'groups' && (
+          <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px, 1fr))', gap: 18}}>
+            {IDOL_GROUPS.map((g, i) => {
+              const grpEvents = EVENTS.filter(e => e.group === g.id);
+              return (
+                <div key={g.id} className={`card ${i%2 ? 'tilt-l' : 'tilt-r'}`} style={{padding:0, overflow:'hidden'}}>
+                  <div className="halftone" style={{background:`linear-gradient(135deg, ${g.color}, ${g.color2})`, padding:'18px 16px', borderBottom:'3px solid var(--ink)', position:'relative'}}>
+                    {g.featured && <span className="sticker pink" style={{position:'absolute', top:10, right:10}}>★ FEATURED</span>}
+                    <div className="font-jp" style={{fontSize:22, color:'#fff', WebkitTextStroke:'2px var(--ink)', lineHeight:1.1}}>{g.nameJp}</div>
+                    <div className="font-display" style={{fontSize:26, color:'#fff', WebkitTextStroke:'2px var(--ink)', lineHeight:1}}>{g.name}</div>
+                  </div>
+                  <div style={{padding:14}}>
+                    <div style={{display:'flex', gap:6, flexWrap:'wrap', marginBottom:8}}>
+                      {g.tags.map(t => <span key={t} className="sticker">{t}</span>)}
+                    </div>
+                    <div style={{fontSize:12, lineHeight:1.5, marginBottom:10}}>{g.bioFr}</div>
+                    <div className="font-mono" style={{fontSize:10, display:'flex', gap:10, opacity:.7}}>
+                      <span>👥 {g.members}</span>
+                      <span>📅 {g.debut}</span>
+                      <span>💗 {g.fans}</span>
+                    </div>
+                    <div style={{borderTop:'2px dashed var(--ink)', marginTop:10, paddingTop:10, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                      <div className="font-mono" style={{fontSize:11}}>{grpEvents.length} concerts</div>
+                      <button className={`btn sm ${followed.includes(g.id)?'pink':''}`} onClick={()=>toggleFollow(g.id)}>
+                        {followed.includes(g.id) ? '★ SUIVI' : '☆ SUIVRE'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Footer */}
+        <footer style={{marginTop: 40, padding: '20px 0', borderTop:'3px dashed var(--ink)', textAlign:'center'}}>
+          <div className="font-mono" style={{fontSize:11, opacity:.6}}>
+            // データは架空 + 実在グループ混合 (KENI BOYSは架空) <br/>
+            // données mixtes : groupes réels, dates fictives — KENI BOYS est inventé<br/>
+            // ─── made with ❤︎ in Harajuku ───
+          </div>
+        </footer>
+      </main>
+
+      {/* Modal */}
+      {pickedEv && (
+        <EventModal ev={pickedEv} group={pickedGroup} venue={pickedVenue} city={pickedCity}
+          onClose={()=>setPickedEventId(null)}
+          isFav={favs.includes(pickedEv.id)}
+          onFav={()=>toggleFav(pickedEv.id)}/>
+      )}
+
+      {/* Tweaks panel */}
+      <TweaksPanel title="Tweaks ✦">
+        <TweakSection label="Typographie"/>
+        <TweakSelect label="Display" value={t.fontDisplay}
+          options={FONT_DISPLAY_OPTIONS}
+          onChange={v=>setTweak('fontDisplay', v)}/>
+        <TweakSelect label="Japonais" value={t.fontJp}
+          options={FONT_JP_OPTIONS}
+          onChange={v=>setTweak('fontJp', v)}/>
+
+        <TweakSection label="Palette"/>
+        <TweakColor label="Primaire" value={t.primary} onChange={v=>setTweak('primary', v)}/>
+        <TweakColor label="Accent" value={t.accent} onChange={v=>setTweak('accent', v)}/>
+        <TweakColor label="Accent 2" value={t.accent2} onChange={v=>setTweak('accent2', v)}/>
+
+        <TweakSection label="Style cartes"/>
+        <TweakRadio label="Style" value={t.cardStyle}
+          options={[
+            {value:'tilted', label:'Tilt'},
+            {value:'flat', label:'Flat'},
+            {value:'color', label:'Color'},
+            {value:'bold', label:'Bold'},
+          ]}
+          onChange={v=>setTweak('cardStyle', v)}/>
+
+        <TweakSection label="Affichage"/>
+        <TweakToggle label="Animations" value={t.animations} onChange={v=>setTweak('animations', v)}/>
+        <TweakToggle label="Mode sombre" value={t.dark} onChange={v=>setTweak('dark', v)}/>
+      </TweaksPanel>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+</script>
+
+<style>
+@media (max-width: 900px) {
+  .map-grid { grid-template-columns: 1fr !important; }
+}
+</style>
+</body>
+</html>

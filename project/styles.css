@@ -1,0 +1,279 @@
+/* Idol JP Calendar — Harajuku maximalist */
+:root {
+  --pink: #ff3ea5;
+  --yellow: #fff200;
+  --cyan: #22d3ee;
+  --lilac: #c084fc;
+  --orange: #ff7a3c;
+  --green: #4ade80;
+  --washi: #fff8ec;
+  --paper: #fdf6e3;
+  --ink: #111111;
+  --ink-soft: #29261b;
+  --shadow: 6px 6px 0 var(--ink);
+  --shadow-sm: 3px 3px 0 var(--ink);
+  --radius: 10px;
+}
+[data-theme="dark"] {
+  --washi: #16121a;
+  --paper: #1f1825;
+  --ink: #fff8ec;
+  --ink-soft: #f5e9d3;
+  --shadow: 6px 6px 0 #ff3ea5;
+  --shadow-sm: 3px 3px 0 #ff3ea5;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--washi);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(circle at 12% 12%, rgba(255,62,165,.12) 0, transparent 22%),
+    radial-gradient(circle at 88% 18%, rgba(34,211,238,.12) 0, transparent 22%),
+    radial-gradient(circle at 70% 85%, rgba(255,242,0,.12) 0, transparent 25%),
+    repeating-linear-gradient(0deg, transparent 0 18px, rgba(0,0,0,.025) 18px 19px);
+}
+[data-theme="dark"] body { background-image:
+    radial-gradient(circle at 12% 12%, rgba(255,62,165,.18) 0, transparent 22%),
+    radial-gradient(circle at 88% 18%, rgba(34,211,238,.14) 0, transparent 22%),
+    radial-gradient(circle at 70% 85%, rgba(255,242,0,.10) 0, transparent 25%);
+}
+
+.font-display { font-family: 'Bagel Fat One', system-ui; font-weight: 400; letter-spacing: .01em; }
+.font-jp { font-family: 'Zen Maru Gothic', system-ui; font-weight: 900; }
+.font-mono { font-family: 'DotGothic16', 'JetBrains Mono', monospace; }
+
+/* Brutalist card */
+.card {
+  background: #fff;
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  position: relative;
+}
+[data-theme="dark"] .card { background: #2a2233; color: var(--ink); }
+.card.tilt-l { transform: rotate(-1.2deg); }
+.card.tilt-r { transform: rotate(1.2deg); }
+
+/* Washi tape */
+.washi {
+  position: absolute;
+  width: 110px;
+  height: 28px;
+  background: repeating-linear-gradient(45deg, var(--yellow), var(--yellow) 8px, #ffd400 8px, #ffd400 16px);
+  border: 1.5px dashed rgba(0,0,0,.3);
+  opacity: 0.92;
+  pointer-events: none;
+}
+.washi.pink { background: repeating-linear-gradient(45deg, #ffb3d9, #ffb3d9 8px, #ff80b8 8px, #ff80b8 16px); }
+.washi.cyan { background: repeating-linear-gradient(45deg, #a5f3fc, #a5f3fc 8px, #67e8f9 8px, #67e8f9 16px); }
+
+/* Sticker */
+.sticker {
+  display: inline-block;
+  padding: 4px 10px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  font-family: 'DotGothic16', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+  letter-spacing: .04em;
+}
+.sticker.pink { background: var(--pink); color: #fff; }
+.sticker.yellow { background: var(--yellow); }
+.sticker.cyan { background: var(--cyan); }
+.sticker.ink { background: var(--ink); color: var(--washi); }
+
+/* Buttons */
+.btn {
+  appearance: none;
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 10px 16px;
+  font-family: 'Bagel Fat One', system-ui;
+  font-size: 14px;
+  letter-spacing: .02em;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform .12s, box-shadow .12s;
+  color: var(--ink);
+}
+.btn:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 var(--ink); }
+.btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--ink); }
+.btn.pink { background: var(--pink); color: #fff; }
+.btn.yellow { background: var(--yellow); }
+.btn.cyan { background: var(--cyan); }
+.btn.ink { background: var(--ink); color: var(--washi); }
+.btn.sm { padding: 6px 12px; font-size: 12px; }
+
+/* Marquee */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.marquee {
+  overflow: hidden; white-space: nowrap; border-block: 3px solid var(--ink);
+  background: var(--ink); color: var(--yellow);
+  padding: 10px 0;
+}
+.marquee-track {
+  display: inline-block; animation: marquee 30s linear infinite;
+  font-family: 'Bagel Fat One', system-ui; font-size: 22px; letter-spacing: .04em;
+}
+.marquee.no-anim .marquee-track { animation: none; }
+
+/* Wiggle */
+@keyframes wiggle {
+  0%,100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+.wiggle { animation: wiggle 1.6s ease-in-out infinite; }
+
+/* Pop */
+@keyframes pop {
+  0% { transform: scale(0.85); }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+.pop { animation: pop .35s cubic-bezier(.3,1.5,.6,1); }
+
+/* Heart pulse */
+@keyframes hb {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+}
+
+/* Halftone */
+.halftone {
+  background-image: radial-gradient(rgba(0,0,0,.45) 1.2px, transparent 1.4px);
+  background-size: 6px 6px;
+}
+
+/* No-anim mode */
+body[data-anim="off"] *, body[data-anim="off"] *::before, body[data-anim="off"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Modal */
+.modal-bg {
+  position: fixed; inset: 0; background: rgba(17,17,17,.6);
+  z-index: 9999; display: grid; place-items: center; padding: 20px;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+
+/* Calendar */
+.cal-day {
+  aspect-ratio: 1.05;
+  border: 2px solid var(--ink);
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px;
+  position: relative;
+  font-family: 'DotGothic16', monospace;
+  cursor: pointer;
+  transition: transform .12s;
+  overflow: hidden;
+}
+[data-theme="dark"] .cal-day { background: #2a2233; }
+.cal-day:hover { transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--ink); z-index: 2; }
+.cal-day.has-events { background: var(--yellow); }
+[data-theme="dark"] .cal-day.has-events { background: #4a3a1a; }
+.cal-day.today { outline: 4px solid var(--pink); outline-offset: -4px; }
+.cal-day.muted { opacity: 0.35; }
+
+/* Scrollbar style */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track { background: var(--washi); border: 2px solid var(--ink); }
+::-webkit-scrollbar-thumb { background: var(--pink); border: 2px solid var(--ink); border-radius: 4px; }
+
+/* Card variants for tweak */
+.card.flat { box-shadow: none; }
+.card.soft { box-shadow: 0 8px 24px rgba(0,0,0,.12); border-width: 2px; }
+.card.outline { box-shadow: var(--shadow); }
+.card.sticker { box-shadow: var(--shadow); border-radius: 18px; }
+
+/* Text edit cursor */
+.event-row { transition: transform .12s; }
+.event-row:hover { transform: translateX(4px); }
+
+/* Status pulses */
+.status-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  margin-right: 5px; border: 1.5px solid var(--ink);
+}
+.status-OPEN { background: #4ade80; }
+.status-LOTTERY { background: #fbbf24; }
+.status-SOLDOUT { background: #ef4444; }
+.status-PAST { background: #9ca3af; }
+.status-TBA { background: #fff200; }
+.status-INFO { background: #22d3ee; }
+
+.event-card.flagged { outline: 2px dashed #ff3ea5; outline-offset: -1px; }
+
+/* Fav button */
+.fav-btn { background: none; border: 0; cursor: pointer; padding: 4px; font-size: 22px; line-height: 1; }
+.fav-btn.on { animation: hb .8s ease-in-out infinite; }
+
+/* Tab system */
+.tabs { display: flex; gap: 0; flex-wrap: wrap; }
+.tab {
+  border: 3px solid var(--ink);
+  background: #fff;
+  padding: 10px 18px;
+  font-family: 'Bagel Fat One', system-ui;
+  font-size: 14px;
+  cursor: pointer;
+  margin-right: -3px;
+  position: relative;
+  color: var(--ink);
+}
+[data-theme="dark"] .tab { background: #2a2233; }
+.tab.active { background: var(--ink); color: var(--yellow); z-index: 2; }
+.tab:hover:not(.active) { background: var(--yellow); }
+.tab:first-child { border-radius: 10px 0 0 10px; }
+.tab:last-child { border-radius: 0 10px 10px 0; margin-right: 0; }
+
+/* Header */
+.app-header {
+  border-bottom: 4px solid var(--ink);
+  background: var(--paper);
+  position: relative;
+  overflow: hidden;
+}
+.logo-blob {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  gap: 0;
+  align-items: center;
+}
+
+/* Grid event cards */
+.event-card {
+  position: relative;
+  padding: 14px;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .12s;
+}
+.event-card:hover { transform: translate(-2px,-2px) rotate(-.5deg); box-shadow: 8px 8px 0 var(--ink); }
+
+/* Sparkle deco */
+.sparkle {
+  position: absolute; pointer-events: none;
+  font-family: 'Bagel Fat One', system-ui;
+  color: var(--yellow); -webkit-text-stroke: 2px var(--ink);
+}
+
+/* Onboarding pop */
+@keyframes slide-in-up {
+  from { opacity: 0; transform: translateY(20px) rotate(-2deg); }
+  to { opacity: 1; transform: translateY(0) rotate(0); }
+}
+.slide-in { animation: slide-in-up .4s cubic-bezier(.3,1.4,.5,1) both; }
