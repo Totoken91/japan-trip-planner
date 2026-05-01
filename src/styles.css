@@ -307,7 +307,7 @@ body[data-anim="off"] *, body[data-anim="off"] *::before, body[data-anim="off"] 
 .trip-map-wrapper.dragging .map-route,
 .trip-map-wrapper.zooming .map-route { display: none; }
 .trip-map-wrapper.dragging .map-fills path,
-.trip-map-wrapper.zooming .map-fills path { stroke: none; }
+.trip-map-wrapper.zooming .map-fills path { stroke-width: 0.4; }
 
 /* ───────── Mobile (≤ 640px) ───────── */
 @media (max-width: 640px) {

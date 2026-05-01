@@ -290,22 +290,16 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
                 ))}
               </g>
             )}
-            {/* Country fills with tier */}
+            {/* Country fills with tier — préfectures du voyage en jaune saturé,
+                les autres en cream. Pas d'outline pointillé : il créait des
+                blobs roses moches sur les petites îles (Izu) et des bordures
+                hachées sur les grosses préfectures. */}
             {paths && (
               <g className="map-fills">
                 {paths.map((p, i) => {
-                  const fill = p.tier === 'hl' ? '#ffe9b3' : '#fff5d9';
+                  const fill = p.tier === 'hl' ? '#fcd34d' : '#fff5d9';
                   return <path key={'p-' + i} d={p.d} fill={fill} stroke="#111" strokeWidth={1.4} strokeLinejoin="round" />;
                 })}
-              </g>
-            )}
-
-            {/* Highlight outline on trip prefectures */}
-            {paths && (
-              <g className="map-highlights">
-                {paths.filter(p => p.tier === 'hl').map((p, i) => (
-                  <path key={'hl-' + i} d={p.d} fill="none" stroke="#ff3ea5" strokeWidth="2.5" strokeDasharray="6 4" strokeLinejoin="round" opacity="0.85" />
-                ))}
               </g>
             )}
 
