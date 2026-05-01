@@ -244,7 +244,7 @@ export default function App() {
         )}
 
         {view === 'map' && (
-          <div style={{display:'grid', gridTemplateColumns:'minmax(0, max-content) minmax(280px, 1fr)', gap:20, justifyContent:'start'}} className="map-grid">
+          <div style={{display:'grid', gridTemplateColumns:'minmax(0, calc(min(80vh, 820px) * 1000 / 900 + 22px)) minmax(280px, 1fr)', gap:20}} className="map-grid">
             <div className="card" style={{padding:8, position:'relative'}}>
               <TripMap projects={projects} cities={CITIES} itinerary={itinerary}
                 onPickCity={onPickCity}
