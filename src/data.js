@@ -209,6 +209,11 @@ export const PROJECTS = [
     notes:'L\'escalier rouge iconique de la scène finale de Kimi no Na wa ("Are you the one I\'ve been searching for?"). Petit shrine très ordinaire à Yotsuya, célèbre uniquement pour ces marches. ~10 min à pied de Yotsuya-Sanchome (ligne Marunouchi) ou Yotsuya Station. Tôt le matin = pas de fans en photo. La visite tient en 15 min.',
     coords:[35.6855, 139.7297], booking:false },
 
+  { id:'ph01', city:'tokyo', cat:'temple', name:'Oiwa Inari Yokomachi (お岩稲荷)', nameJp:'於岩稲荷田宮神社',
+    priority:'NICE', status:'TODO', budget:0, hours:'24/7',
+    notes:'Sanctuaire dédié à Oiwa, le fantôme vengeur du Yotsuya Kaidan (1825) — l\'histoire d\'horreur la plus célèbre du Japon, base de TOUS les J-horror modernes (Ring, Ju-on, etc.). Tradition : tout adaptateur de la légende vient prier ici avant le tournage pour éviter la malédiction (+sieurs accidents documentés sur ceux qui n\'ont pas joué le jeu). Petit, ~10 min à pied de Suga Shrine (à enchaîner avec p019). Vibe creepy garantie après la nuit tombée.',
+    coords:[35.6892, 139.7245], booking:false },
+
   // ============= KAWAGUCHIKO =============
   { id:'p020', city:'kawaguchiko', cat:'photo', name:'Chureito Pagoda', nameJp:'忠霊塔',
     priority:'MUST', status:'TODO', budget:0, hours:'24/7',
@@ -230,6 +235,11 @@ export const PROJECTS = [
     priority:'NICE', status:'TODO', budget:1500, hours:'11:00–19:00',
     notes:'Spécialité Yamanashi : nouilles épaisses dans bouillon miso. Architecture ovoïde fascinante.',
     coords:[35.5052, 138.7654], booking:false },
+
+  { id:'ph02', city:'kawaguchiko', cat:'nature', name:'Aokigahara — forêt + grottes de lave', nameJp:'青木ヶ原樹海',
+    priority:'NICE', status:'TODO', budget:700, hours:'09:00–17:00 (grottes)',
+    notes:'La "Mer d\'Arbres" au pied du Fuji — forêt primaire sur lave durcie, sol noir, silence dense, boussoles qui s\'affolent (vraie anomalie magnétique due au fer dans la roche volcanique). Ambiance unique au monde, légendes shinto + folklore récent.\nVisiter via les sentiers balisés et les grottes de lave :\n• Narusawa Hyoketsu (鳴沢氷穴) — grotte de glace permanente, ~¥350\n• Fugaku Furyo (富岳風穴) — grotte des vents, ~¥350\n• Combo ticket 2 grottes ~¥600\n⚠ NE PAS quitter les sentiers balisés (la forêt est genuinely facile à se perdre + cellulaire qui marche pas + boussole qui ment). Bus depuis gare Kawaguchiko ~30 min.',
+    coords:[35.4724, 138.6417], booking:false },
 
   // ============= MATSUMOTO =============
   { id:'p030', city:'matsumoto', cat:'temple', name:'Château de Matsumoto', nameJp:'松本城',
@@ -275,6 +285,11 @@ export const PROJECTS = [
     priority:'MUST', status:'TODO', budget:600, hours:'04:30–16:30',
     notes:'Un des temples les plus importants du Japon. Cérémonie matinale (Oasaji) à l\'aube.',
     coords:[36.6618, 138.1872], booking:false },
+
+  { id:'ph03', city:'nagano', cat:'photo', name:'Tunnels abandonnés Usui Pass (アプトの道)', nameJp:'旧信越本線・アプトの道',
+    priority:'MUST', status:'TODO', budget:0, hours:'24/7',
+    notes:'LE tunnel du screenshot TikTok @occultravel666. Anciens tunnels en briques de l\'ancienne ligne Shinetsu, abandonnés en 1997 quand le Hokuriku Shinkansen a ouvert. 11 km de sentier "Apt no Michi" (アプトの道) le long des rails désaffectés, 26 tunnels + ponts dont le célèbre Megane-bashi. Briques recouvertes de mousse, ambiance Spirited Away / abandonné, MASSIVEMENT photographié comme spot 心霊 (hanté).\nAccès depuis Nagano : Hokuriku Shinkansen Nagano → Karuizawa (~28 min, ¥3500), puis bus/taxi jusqu\'à Kumanotaira (côté Karuizawa) ou train jusqu\'à Yokokawa côté Gunma. Compter 1/2 journée. **Lampe frontale obligatoire** (certains tunnels longs et noirs). Sentier praticable même par jour de pluie (= encore plus eerie).',
+    coords:[36.3625, 138.6920], booking:false },
 
   { id:'p042', city:'nagano', cat:'hotel', name:'Ryokan Yudanaka/Shibu Onsen', nameJp:'渋温泉旅館',
     priority:'MUST', status:'TODO', budget:60000, hours:'check-in 15:00', booking:true,
@@ -339,6 +354,16 @@ export const PROJECTS = [
     priority:'NICE', status:'TODO', budget:15000, hours:'18:00–21:00', booking:true,
     notes:'Au moins 1 kaiseki à Kyoto. Réserver. Roan Kikunoi, Giro Giro Hitoshina (plus accessible)…',
     coords:[35.0036, 135.7758] },
+
+  { id:'ph04', city:'kyoto', cat:'temple', name:'Adashino Nenbutsu-ji (8000 bouddhas oubliés)', nameJp:'化野念仏寺',
+    priority:'NICE', status:'TODO', budget:500, hours:'09:00–16:30',
+    notes:'Lieu où les morts sans famille étaient abandonnés à l\'époque de Heian (8e-12e siècle). Au 13e, le moine Honen a rassemblé les ossements et érigé 8000+ stèles bouddhiques pour les âmes oubliées — alignées en rangs serrés, certaines couvertes de mousse, autres décapitées. Dans le quartier Sagano (à 15 min de la bambouseraie d\'Arashiyama, p063). Ambiance crépusculaire en fin d\'après-midi, surtout par jour de pluie/brume. Cérémonie Sentōkuyō avec 1000 bougies en août — pas pendant le voyage, mais le site reste fort.',
+    coords:[35.0250, 135.6608], booking:false },
+
+  { id:'ph05', city:'kyoto', cat:'temple', name:'Otagi Nenbutsu-ji (1200 rakan)', nameJp:'愛宕念仏寺',
+    priority:'NICE', status:'TODO', budget:300, hours:'08:00–16:30',
+    notes:'5 min uphill depuis Adashino (ph04). 1200 statues de rakan (disciples du Bouddha) sculptées par des amateurs dans les années 1980 — chacune avec sa tronche unique : un avec une raquette de tennis, un autre une cannette de bière, certains rigolent, d\'autres font la gueule. Recouverts de mousse jusqu\'aux yeux. Pas hanté techniquement mais l\'effet "1200 visages de pierre qui te regardent" en pleine forêt humide est très Mononoke / Spirited Away.',
+    coords:[35.0322, 135.6533], booking:false },
 
   { id:'p067', city:'kyoto', cat:'hotel', name:'Machiya / Ryokan Kyoto (Higashiyama/Gion)', nameJp:'町家',
     priority:'MUST', status:'TODO', budget:60000, hours:'check-in 15:00', booking:true,
