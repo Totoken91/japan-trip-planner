@@ -14,7 +14,7 @@ const TRIP_HIGHLIGHT = new Set([13, 19, 20, 17, 26]);
 // Okinawa exclu pour ne pas tirer le cadrage trop au sud
 const SKIP_PREF = new Set([47]);
 
-const TMAP_W = 800, TMAP_H = 900;
+const TMAP_W = 1000, TMAP_H = 900;
 
 export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, setHoveredCity, animations }) {
   const [paths, setPaths] = useState(null);
@@ -27,27 +27,26 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
   // Refs for high-frequency updates (avoid React re-renders during gesture)
   const wrapperRef = useRef(null);
   const svgRef = useRef(null);
-  const innerGRef = useRef(null);
+  const mapGRef = useRef(null);    // <g> contenant pays/route/sakura — couche stable
+  const pinsGRef = useRef(null);   // <g> contenant uniquement les pins — couche secondaire
   const pinRefs = useRef(new Map()); // cid -> SVG <g>
+  const footerRef = useRef(null);  // <text> du zoom × N (mise à jour DOM directe)
   const liveRef = useRef({ pan: { x: 0, y: 0 }, zoom: 1 });
   const pinPosRef = useRef({});
   const hoveredRef = useRef(null);
   const rafRef = useRef(0);
 
-  // RAF-throttled DOM mutation : applique pan/zoom sur le <g> intérieur
-  // et le contre-scale 1/zoom sur chaque pin, sans re-render React.
+  // RAF-throttled DOM mutation : pan/zoom sur les 2 <g> frères + contre-scale
+  // par pin. Le map layer ne mute jamais ses enfants → composite GPU pur.
+  // Les pins forment une mini-couche séparée (6 éléments).
   const applyAll = () => {
     if (rafRef.current) return;
     rafRef.current = requestAnimationFrame(() => {
       rafRef.current = 0;
       const { pan: p, zoom: z } = liveRef.current;
-      const inner = innerGRef.current;
-      if (inner) {
-        inner.setAttribute(
-          'transform',
-          `translate(${TMAP_W / 2 + p.x} ${TMAP_H / 2 + p.y}) scale(${z}) translate(${-TMAP_W / 2} ${-TMAP_H / 2})`
-        );
-      }
+      const transform = `translate(${TMAP_W / 2 + p.x} ${TMAP_H / 2 + p.y}) scale(${z}) translate(${-TMAP_W / 2} ${-TMAP_H / 2})`;
+      if (mapGRef.current) mapGRef.current.setAttribute('transform', transform);
+      if (pinsGRef.current) pinsGRef.current.setAttribute('transform', transform);
       const inv = 1 / z;
       pinRefs.current.forEach((el, cid) => {
         if (!el) return;
@@ -56,6 +55,9 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
         const s = (isHover ? 1.25 : 1) * inv;
         el.setAttribute('transform', `translate(${pos[0]} ${pos[1]}) scale(${s})`);
       });
+      if (footerRef.current) {
+        footerRef.current.textContent = `27 mai → 17 juin 2026 · 6 étapes · zoom×${z.toFixed(1)}`;
+      }
     });
   };
 
@@ -78,9 +80,15 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
       const delta = -e.deltaY * 0.0015;
       const newZoom = Math.max(0.6, Math.min(5, liveRef.current.zoom * (1 + delta)));
       liveRef.current = { ...liveRef.current, zoom: newZoom };
+      // Pause SMIL pendant la rafale wheel pour libérer le compositor.
+      try { svgRef.current?.pauseAnimations?.(); } catch {}
       applyAll();
       clearTimeout(wheelTimer);
-      wheelTimer = setTimeout(() => setZoom(liveRef.current.zoom), 180);
+      // Pas de commit React : footerRef met à jour l'affichage zoom×N en live.
+      // Reprise des animations 200ms après la dernière rafale.
+      wheelTimer = setTimeout(() => {
+        try { svgRef.current?.unpauseAnimations?.(); } catch {}
+      }, 200);
     };
 
     let isDragging = false;  // n'active la classe + pause SMIL qu'après mouvement réel
@@ -230,15 +238,15 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
            position: 'relative', width: '100%',
            aspectRatio: `${TMAP_W} / ${TMAP_H}`,
            maxHeight: 'min(80vh, 820px)',
-           maxWidth: 'calc(min(80vh, 820px) * 800 / 900)',
+           maxWidth: 'calc(min(80vh, 820px) * 1000 / 900)',
            margin: '0 auto',
            touchAction: 'none',
            userSelect: 'none', WebkitUserSelect: 'none',
          }}>
       {/* Zoom controls */}
       <div data-no-pan style={{ position: 'absolute', top: 10, right: 10, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <button className="btn sm" onClick={() => setZoom(z => Math.min(5, z * 1.3))} style={{ padding: '4px 10px', fontSize: 18, lineHeight: 1 }}>+</button>
-        <button className="btn sm" onClick={() => setZoom(z => Math.max(0.6, z / 1.3))} style={{ padding: '4px 10px', fontSize: 18, lineHeight: 1 }}>−</button>
+        <button className="btn sm" onClick={() => setZoom(Math.min(5, liveRef.current.zoom * 1.3))} style={{ padding: '4px 10px', fontSize: 18, lineHeight: 1 }}>+</button>
+        <button className="btn sm" onClick={() => setZoom(Math.max(0.6, liveRef.current.zoom / 1.3))} style={{ padding: '4px 10px', fontSize: 18, lineHeight: 1 }}>−</button>
         <button className="btn sm yellow" onClick={resetView} style={{ padding: '4px 8px', fontSize: 11 }}>↺</button>
       </div>
       <div style={{ position: 'absolute', bottom: 10, right: 10, zIndex: 10 }} className="font-mono">
@@ -260,7 +268,8 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
 
         <rect width={TMAP_W} height={TMAP_H} fill="url(#tdots)" opacity="0.5" />
         <rect width={TMAP_W} height={TMAP_H} fill="url(#twave)" opacity="0.35" />
-        <g ref={innerGRef}
+        {/* Couche pays/route/sakura — stable, willChange:transform composite GPU */}
+        <g ref={mapGRef}
            style={{ willChange: 'transform' }}
            transform={`translate(${TMAP_W / 2 + pan.x} ${TMAP_H / 2 + pan.y}) scale(${zoom}) translate(${-TMAP_W / 2} ${-TMAP_H / 2})`}>
           <g clipPath="url(#trip-clip)">
@@ -318,7 +327,15 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
               </g>
             )}
 
-            {/* Pins */}
+          </g>
+        </g>
+
+        {/* Couche pins — séparée pour que les mutations de contre-scale (zoom)
+            n'invalident pas la couche pays */}
+        <g ref={pinsGRef}
+           style={{ willChange: 'transform' }}
+           transform={`translate(${TMAP_W / 2 + pan.x} ${TMAP_H / 2 + pan.y}) scale(${zoom}) translate(${-TMAP_W / 2} ${-TMAP_H / 2})`}>
+          <g clipPath="url(#trip-clip)">
             {paths && Object.entries(cities).map(([cid, c]) => {
               const pos = pinPos[cid];
               if (!pos) return null;
@@ -367,9 +384,9 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
                 </g>
               );
             })}
-
           </g>
         </g>
+
         {/* Title stickers — fixes, hors zoom, en surcouche pour ne pas être masqués par le pays */}
         <g transform="translate(30 760) rotate(-5)" style={{ pointerEvents: 'none' }}>
           <rect x="-8" y="-26" width="240" height="50" fill="#fff200" stroke="#111" strokeWidth="3" rx="4" />
@@ -387,9 +404,9 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
           <text textAnchor="middle" y="-26" fontFamily="'DotGothic16', monospace" fontSize="11" fill="#111">N</text>
         </g>
 
-        {/* Footer */}
+        {/* Footer — texte mis à jour en live via footerRef pendant le wheel zoom */}
         <g transform={`translate(${TMAP_W / 2} ${TMAP_H - 12})`} style={{ pointerEvents: 'none' }}>
-          <text textAnchor="middle" fontFamily="'DotGothic16', monospace" fontSize="9" fill="#111" opacity="0.4">
+          <text ref={footerRef} textAnchor="middle" fontFamily="'DotGothic16', monospace" fontSize="9" fill="#111" opacity="0.4">
             27 mai → 17 juin 2026 · 6 étapes · zoom×{zoom.toFixed(1)}
           </text>
         </g>
