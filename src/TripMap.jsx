@@ -298,7 +298,7 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
               <g className="map-fills">
                 {paths.map((p, i) => {
                   const fill = p.tier === 'hl' ? '#fcd34d' : '#fff5d9';
-                  return <path key={'p-' + i} d={p.d} fill={fill} stroke="#111" strokeWidth={1.4} strokeLinejoin="round" />;
+                  return <path key={'p-' + i} d={p.d} fill={fill} stroke="#111" strokeWidth={0.6} strokeLinejoin="round" />;
                 })}
               </g>
             )}
