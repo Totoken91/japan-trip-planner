@@ -1,26 +1,28 @@
 // Composants : ProjectCard, ProjectModal, TripCalendar, ItineraryStrip, AddProjectModal
+import { Fragment, useEffect, useState } from 'react';
+import { TRIP } from './data.js';
 
-const PRIO_INFO = {
+export const PRIO_INFO = {
   MUST:  { label:'MUST',  color:'#ff3ea5', textColor:'#fff' },
   NICE:  { label:'NICE',  color:'#fff200', textColor:'#111' },
   MAYBE: { label:'MAYBE', color:'#22d3ee', textColor:'#111' },
 };
-const STATUS_INFO = {
+export const STATUS_INFO = {
   SHORTLIST: { label:'SHORTLIST', emoji:'📝', color:'#e5e7eb' },
   TODO:      { label:'À FAIRE',   emoji:'⭐', color:'#fff200' },
   DONE:      { label:'FAIT',      emoji:'✅', color:'#10b981' },
   CANCELED:  { label:'ANNULÉ',    emoji:'❌', color:'#9ca3af' },
 };
 
-function fmtMoney(jpy) {
+export function fmtMoney(jpy) {
   if (!jpy) return '—';
   return `¥${jpy.toLocaleString()}`;
 }
-function fmtDateShort(iso) {
+export function fmtDateShort(iso) {
   const d = new Date(iso);
   return `${d.getDate()}/${d.getMonth()+1}`;
 }
-function dayInTrip(iso, tripStart) {
+export function dayInTrip(iso, tripStart) {
   const d = new Date(iso); const s = new Date(tripStart);
   return Math.floor((d - s) / 86400000) + 1;
 }
@@ -28,7 +30,7 @@ function dayInTrip(iso, tripStart) {
 // =====================================================
 // CARTE D'UN PROJET (ce qu'on voit dans la grid)
 // =====================================================
-function ProjectCard({ p, city, cat, onClick, cardStyle, photo }) {
+export function ProjectCard({ p, city, cat, onClick, cardStyle, photo }) {
   const prio = PRIO_INFO[p.priority] || PRIO_INFO.MAYBE;
   const st = STATUS_INFO[p.status] || STATUS_INFO.TODO;
   const tilt = cardStyle === 'tilted' ? (parseInt(p.id.replace(/\D/g,''))%2 ? 'tilt-l':'tilt-r') : '';
@@ -85,10 +87,10 @@ function ProjectCard({ p, city, cat, onClick, cardStyle, photo }) {
 // =====================================================
 // MODAL DÉTAIL D'UN PROJET (avec édition)
 // =====================================================
-function ProjectModal({ p, city, cat, onClose, onUpdate, onDelete, photos, onAddPhoto }) {
+export function ProjectModal({ p, city, cat, onClose, onUpdate, onDelete, photos, onAddPhoto }) {
   if (!p) return null;
-  const [draft, setDraft] = React.useState(p);
-  React.useEffect(() => setDraft(p), [p?.id]);
+  const [draft, setDraft] = useState(p);
+  useEffect(() => setDraft(p), [p?.id]);
 
   const save = (patch) => {
     const next = { ...draft, ...patch };
@@ -193,7 +195,7 @@ function ProjectModal({ p, city, cat, onClose, onUpdate, onDelete, photos, onAdd
             <input type="number" value={draft.budget||0} onChange={e=>save({budget: parseInt(e.target.value)||0})}
               className="btn sm" style={{width:'100%', fontFamily:'DotGothic16, monospace'}}/>
             <div className="font-mono" style={{fontSize:10, opacity:.6, marginTop:2}}>
-              ≈ {((draft.budget||0)*window.TRIP.jpyToEur).toFixed(2)}€
+              ≈ {((draft.budget||0)*TRIP.jpyToEur).toFixed(2)}€
             </div>
           </div>
 
@@ -209,7 +211,7 @@ function ProjectModal({ p, city, cat, onClose, onUpdate, onDelete, photos, onAdd
           <div style={{gridColumn:'1 / -1'}}>
             <div className="font-mono" style={{fontSize:10, opacity:.6, marginBottom:4}}>// JOUR PRÉVU (optionnel)</div>
             <input type="date" value={draft.scheduledDate || ''}
-              min={window.TRIP.startDate} max={window.TRIP.endDate}
+              min={TRIP.startDate} max={TRIP.endDate}
               onChange={e=>save({scheduledDate: e.target.value})}
               className="btn sm" style={{width:'100%', fontFamily:'DotGothic16, monospace'}}/>
             {draft.scheduledDate && (
@@ -253,8 +255,8 @@ function ProjectModal({ p, city, cat, onClose, onUpdate, onDelete, photos, onAdd
 // =====================================================
 // AJOUTER UN PROJET
 // =====================================================
-function AddProjectModal({ cities, categories, onClose, onCreate }) {
-  const [draft, setDraft] = React.useState({
+export function AddProjectModal({ cities, categories, onClose, onCreate }) {
+  const [draft, setDraft] = useState({
     name:'', nameJp:'', city:'tokyo', cat:'resto',
     priority:'NICE', status:'SHORTLIST', budget:0, hours:'', notes:'', booking:false
   });
@@ -341,7 +343,7 @@ function AddProjectModal({ cities, categories, onClose, onCreate }) {
 // =====================================================
 // CALENDRIER MENSUEL avec projets schedulés
 // =====================================================
-function TripCalendar({ projects, cities, categories, year, month, setMonth, setYear, onPickProject, itinerary }) {
+export function TripCalendar({ projects, cities, categories, year, month, setMonth, setYear, onPickProject, itinerary }) {
   const first = new Date(year, month, 1);
   const startDay = first.getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -372,7 +374,7 @@ function TripCalendar({ projects, cities, categories, year, month, setMonth, set
 
   const isInTrip = (d) => {
     const date = new Date(year, month, d);
-    return date >= new Date(window.TRIP.startDate) && date <= new Date(window.TRIP.endDate);
+    return date >= new Date(TRIP.startDate) && date <= new Date(TRIP.endDate);
   };
 
   const monthName = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sept','Oct','Nov','Déc'][month];
@@ -440,9 +442,8 @@ function TripCalendar({ projects, cities, categories, year, month, setMonth, set
 // =====================================================
 // BANDE D'ITINÉRAIRE EN HAUT (segments visuels)
 // =====================================================
-function ItineraryStrip({ itinerary, cities, currentCity, setCurrentCity, projects }) {
+export function ItineraryStrip({ itinerary, cities, currentCity, setCurrentCity, projects }) {
   const total = itinerary.reduce((s, it) => s + it.nights, 0);
-  const today = new Date();
   return (
     <div className="card" style={{padding:14, marginBottom:18, position:'relative', overflow:'hidden'}}>
       <div className="washi pink" style={{top:-12, right:30, transform:'rotate(3deg)'}}/>
@@ -459,7 +460,7 @@ function ItineraryStrip({ itinerary, cities, currentCity, setCurrentCity, projec
           const projCount = projects.filter(p => p.city === it.city).length;
           const isActive = currentCity === it.city;
           return (
-            <React.Fragment key={i}>
+            <Fragment key={i}>
               <div onClick={()=>setCurrentCity(isActive ? null : it.city)} style={{
                 flex: `${it.nights} 0 auto`, minWidth: 110, padding:'10px 12px',
                 background: isActive ? c.color : c.color2,
@@ -477,13 +478,10 @@ function ItineraryStrip({ itinerary, cities, currentCity, setCurrentCity, projec
                 </div>
               </div>
               {i < itinerary.length-1 && <div style={{display:'flex', alignItems:'center', padding:'0 4px', fontSize:18, color:'var(--ink)'}}>→</div>}
-            </React.Fragment>
+            </Fragment>
           );
         })}
       </div>
     </div>
   );
 }
-
-Object.assign(window, { ProjectCard, ProjectModal, AddProjectModal, TripCalendar, ItineraryStrip,
-  PRIO_INFO, STATUS_INFO, fmtMoney, fmtDateShort, dayInTrip });

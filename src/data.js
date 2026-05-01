@@ -1,7 +1,7 @@
 // Japan Trip Planner — données du voyage
 // 27 mai → 17 juin 2026 · Tokyo → Mont Fuji → Nagano → Kyoto
 
-window.TRIP = {
+export const TRIP = {
   startDate: '2026-05-27',
   endDate: '2026-06-17',
   travelers: 2,
@@ -11,7 +11,7 @@ window.TRIP = {
 };
 
 // Villes du voyage (avec coordonnées GPS réelles + segment d'itinéraire)
-window.CITIES = {
+export const CITIES = {
   tokyo: {
     name: 'Tokyo',
     nameJp: '東京',
@@ -81,7 +81,7 @@ window.CITIES = {
 };
 
 // Itinéraire avec dates précises (modifiables)
-window.ITINERARY = [
+export const ITINERARY = [
   { city: 'tokyo', from: '2026-05-27', to: '2026-06-04', nights: 8 },
   { city: 'kawaguchiko', from: '2026-06-04', to: '2026-06-06', nights: 2 },
   { city: 'matsumoto', from: '2026-06-06', to: '2026-06-08', nights: 2 },
@@ -91,7 +91,7 @@ window.ITINERARY = [
 ];
 
 // Catégories de projets — emoji, label FR/JP, couleur
-window.CATEGORIES = {
+export const CATEGORIES = {
   resto:     { fr: 'Resto / café',  jp: 'グルメ',     emoji: '🍜', color: '#ff7a3c' },
   temple:    { fr: 'Temple / sanctuaire', jp: '神社仏閣', emoji: '⛩', color: '#ef4444' },
   shopping:  { fr: 'Shopping',      jp: '買い物',     emoji: '🛍', color: '#ff3ea5' },
@@ -109,7 +109,7 @@ window.CATEGORIES = {
 
 // Projets de voyage — 2 par catégorie principale en seed
 // Coordonnées GPS approx pour la map détaillée par ville
-window.PROJECTS = [
+export const PROJECTS = [
   // ============= TOKYO =============
   { id:'p001', city:'tokyo', cat:'shopping', name:'Shibuya Crossing + Mag\'s Park', nameJp:'渋谷スクランブル交差点',
     priority:'MUST', status:'TODO', budget:1000, hours:'24/7',
