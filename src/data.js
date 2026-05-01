@@ -1,5 +1,5 @@
 // Japan Trip Planner — données du voyage
-// 27 mai → 17 juin 2026 · Tokyo → Mont Fuji → Nagano → Kyoto
+// 27 mai → 17 juin 2026 · Tokyo → Kawaguchiko → Matsumoto → Nagano → Kanazawa → Kyoto
 
 export const TRIP = {
   startDate: '2026-05-27',
@@ -193,13 +193,14 @@ export const PROJECTS = [
 
   { id:'p017', city:'tokyo', cat:'museum', name:'Ghibli Museum Mitaka', nameJp:'三鷹の森ジブリ美術館',
     priority:'MUST', status:'TODO', budget:1000, hours:'10:00–18:00', booking:true,
-    notes:'⚠ RÉSERVATION OBLIGATOIRE le 10 du mois précédent. Très difficile à avoir.',
+    notes:'⚠ RÉSERVATION le 10 du mois précédent à 10:00 JST (3h du mat à Paris) via Lawson Ticket — site requiert un téléphone JP. Pour visite début/mi-juin = ouverture des billets le 10 mai. Alternative pour étrangers : passer par JTB / agences agréées (markup mais quota international garanti, à booker plusieurs mois avant). Sinon : revente épuisée en quelques minutes.',
     coords:[35.6963, 139.5704] },
 
-  { id:'p018', city:'tokyo', cat:'hotel', name:'Hôtel Shinjuku — TBD', nameJp:'新宿ホテル',
-    priority:'MUST', status:'TODO', budget:120000, hours:'check-in 15:00',
-    notes:'Réservation à confirmer. Préférer Shinjuku/Shibuya pour transport facile. 8 nuits.',
-    coords:[35.6938, 139.7036], booking:true },
+  { id:'p018', city:'tokyo', cat:'hotel', name:'Hôtel Tokyo (Shinjuku/Shibuya) — TBD', nameJp:'東京ホテル',
+    priority:'MUST', status:'TODO', budget:120000, hours:'check-in 15:00', booking:true,
+    scheduledDate:'2026-05-27',
+    notes:'Check-in 27 mai → check-out 4 juin (8 nuits, ~¥15k/nuit pour 2). Préférer Shinjuku/Shibuya/Shin-Okubo pour Yamanote + accès aéroport. Suggestions :\n• Hotel Gracery Shinjuku (immeuble Godzilla, Kabukicho, ~$155/nuit)\n• JR Kyushu Hotel Blossom Shinjuku (1min station, prix raisonnable)\n• Sotetsu Fresa Inn Higashi Shinjuku (Kabukicho, petit-déj inclus)\n• Best Hotel (Shin-Okubo, value)\nAlternatives moins chères : Ueno, Akihabara, Gotanda (sur Yamanote).',
+    coords:[35.6938, 139.7036] },
 
   // ============= KAWAGUCHIKO =============
   { id:'p020', city:'kawaguchiko', cat:'photo', name:'Chureito Pagoda', nameJp:'忠霊塔',
@@ -212,9 +213,10 @@ export const PROJECTS = [
     notes:'Vélo électrique autour du lac (~2h). Téléphérique du Mont Tenjō côté nord.',
     coords:[35.5117, 138.7669], booking:false },
 
-  { id:'p022', city:'kawaguchiko', cat:'hotel', name:'Ryokan avec onsen + vue Fuji', nameJp:'富士山旅館',
+  { id:'p022', city:'kawaguchiko', cat:'hotel', name:'Ryokan Kawaguchiko — vue Fuji + onsen', nameJp:'河口湖旅館',
     priority:'MUST', status:'TODO', budget:80000, hours:'check-in 15:00', booking:true,
-    notes:'Le must = ryokan kaiseki + rotenburo (bain extérieur) avec vue Fuji. Réserver 2-3 mois avant.',
+    scheduledDate:'2026-06-04',
+    notes:'Check-in 4 juin → check-out 6 juin (2 nuits, le poste budget le plus important du voyage). Cible : ryokan + kaiseki + rotenburo (bain extérieur) avec vue Fuji. Suggestions :\n• Shuhokaku Kogetsu — bord du lac, rotenburo bambou avec vue directe Fuji, kaiseki en chambre\n• Hotel Asafuji — bain panoramique lac + Fuji, 40% des hôtes prennent le kaiseki\n• Fuji Onsen Yumedono (5★) — bain privé extérieur dans chaque chambre\n• Kasuitei Ooya — onsen + kaiseki, bon rapport prestige/prix\n⚠ Saison des pluies débute autour du 7 juin → vue Fuji aléatoire, prévoir une matinée flexible pour saisir une éclaircie.',
     coords:[35.5117, 138.7669] },
 
   { id:'p023', city:'kawaguchiko', cat:'resto', name:'Hoto Fudo (nouilles plates)', nameJp:'ほうとう不動',
@@ -233,10 +235,16 @@ export const PROJECTS = [
     notes:'Nagano = pays du soba. Tester chez Kobayashi ou Nomugi.',
     coords:[36.2381, 137.9719], booking:false },
 
+  { id:'p032', city:'matsumoto', cat:'hotel', name:'Hôtel Matsumoto — TBD', nameJp:'松本ホテル',
+    priority:'MUST', status:'TODO', budget:30000, hours:'check-in 15:00', booking:true,
+    scheduledDate:'2026-06-06',
+    notes:'Check-in 6 juin → check-out 8 juin (2 nuits). Suggestions :\n• Dormy Inn Matsumoto (onsen naturel + ramen offert le soir, 10min à pied du château) — option confort/onsen\n• Richmond Hotel Matsumoto (4★ proche château)\n• Tabino Hotel lit Matsumoto (5min station, very bien noté)\nRéserver 2-3 mois avant — Matsumoto est court mais demandé en saison.',
+    coords:[36.2330, 137.9720] },
+
   // ============= NAGANO =============
   { id:'p040', city:'nagano', cat:'nature', name:'Jigokudani — singes des neiges', nameJp:'地獄谷野猿公苑',
-    priority:'MUST', status:'TODO', budget:800, hours:'09:00–16:00',
-    notes:'Macaques dans les onsen (en hiver mieux). Marche 30min depuis le parking. Bus depuis Yudanaka.',
+    priority:'MUST', status:'TODO', budget:800, hours:'08:30–17:00 (été)',
+    notes:'⚠ En juin : les macaques sont là toute l\'année MAIS très peu (voire pas) dans l\'onsen — l\'eau ~40°C est trop chaude vs l\'air. La photo iconique = décembre→mars. En juin on les voit autour des bassins, parfois un seul qui se baigne par jour pluvieux. Marche ~30min depuis le parking (chemin forestier, peut être boueux en saison des pluies). Bus depuis Yudanaka.',
     coords:[36.7327, 138.4634], booking:false },
 
   { id:'p041', city:'nagano', cat:'temple', name:'Zenkō-ji', nameJp:'善光寺',
@@ -244,9 +252,10 @@ export const PROJECTS = [
     notes:'Un des temples les plus importants du Japon. Cérémonie matinale (Oasaji) à l\'aube.',
     coords:[36.6618, 138.1872], booking:false },
 
-  { id:'p042', city:'nagano', cat:'hotel', name:'Onsen ryokan Yudanaka/Shibu', nameJp:'渋温泉旅館',
-    priority:'NICE', status:'TODO', budget:60000, hours:'check-in 15:00', booking:true,
-    notes:'Shibu Onsen = village thermal traditionnel, 9 bains publics avec yukata.',
+  { id:'p042', city:'nagano', cat:'hotel', name:'Ryokan Yudanaka/Shibu Onsen', nameJp:'渋温泉旅館',
+    priority:'MUST', status:'TODO', budget:60000, hours:'check-in 15:00', booking:true,
+    scheduledDate:'2026-06-08',
+    notes:'Check-in 8 juin → check-out 11 juin (3 nuits). Shibu Onsen = village thermal millénaire, 9 bains publics à faire en yukata. Suggestions :\n• Kanaguya — 200 ans d\'histoire, bois + galeries, inspiration de Spirited Away (le plus iconique)\n• Korakukan Jigokudani — à 100m du parc des singes, bains intérieur + extérieur (pour l\'expérience reculée)\n• Suminoyu Ryokan — accès aux 9 bains publics + navette Jigokudani\n• Masuya — 140 ans, 4 chambres avec rotenburo privé, à Yudanaka\n⚠ Singes en juin = très peu probable dans l\'onsen (eau trop chaude). Le village/yukata onsen reste génial.',
     coords:[36.7427, 138.4234] },
 
   // ============= KANAZAWA =============
@@ -262,8 +271,14 @@ export const PROJECTS = [
 
   { id:'p052', city:'kanazawa', cat:'resto', name:'Omicho Market — sushi/kaisen-don', nameJp:'近江町市場',
     priority:'MUST', status:'TODO', budget:3500, hours:'09:00–17:00',
-    notes:'Marché aux poissons de Kanazawa. Crabes des neiges en saison.',
+    notes:'Marché aux poissons de Kanazawa. Crabes des neiges hors saison en juin (saison nov→mars), mais oursin/crevette d\'Hokuriku au top.',
     coords:[36.5712, 136.6580], booking:false },
+
+  { id:'p053', city:'kanazawa', cat:'hotel', name:'Hôtel Kanazawa — TBD', nameJp:'金沢ホテル',
+    priority:'MUST', status:'TODO', budget:35000, hours:'check-in 15:00', booking:true,
+    scheduledDate:'2026-06-11',
+    notes:'Check-in 11 juin → check-out 13 juin (2 nuits). Suggestions :\n• Maki No Oto Boutique Hotel — machiya restaurée en plein Higashi Chaya, design Zen (le plus immersif)\n• Kanazawa Hakuchoro Hotel Sanraku — entre Kenroku-en, shopping street et Higashi Chaya, onsen sur place\n• Mitsui Garden Hotel Kanazawa — 4★ central proche Kenroku-en\n• Yamanoo Ryokan — chaque chambre avec onsen privé en cyprès (Higashi Chaya)\nMachiya en chaya = ~¥25-45k/pers avec 2 repas. Réserver 3-6 mois avant.',
+    coords:[36.5731, 136.6664] },
 
   // ============= KYOTO =============
   { id:'p060', city:'kyoto', cat:'temple', name:'Fushimi Inari Taisha', nameJp:'伏見稲荷大社',
@@ -301,9 +316,10 @@ export const PROJECTS = [
     notes:'Au moins 1 kaiseki à Kyoto. Réserver. Roan Kikunoi, Giro Giro Hitoshina (plus accessible)…',
     coords:[35.0036, 135.7758] },
 
-  { id:'p067', city:'kyoto', cat:'hotel', name:'Machiya ou ryokan Kyoto', nameJp:'町家',
+  { id:'p067', city:'kyoto', cat:'hotel', name:'Machiya / Ryokan Kyoto (Higashiyama/Gion)', nameJp:'町家',
     priority:'MUST', status:'TODO', budget:60000, hours:'check-in 15:00', booking:true,
-    notes:'Privilégier une machiya (maison traditionnelle) ou ryokan dans Higashiyama/Gion. 4 nuits.',
+    scheduledDate:'2026-06-13',
+    notes:'Check-in 13 juin → check-out 17 juin (4 nuits). Privilégier une machiya restaurée à Higashiyama/Gion. Suggestions :\n• Ishibekoji Muan (5★, 3 chambres seulement, ruelles silencieuses de Gion, bain privé)\n• Indigo House Gion (machiya restaurée à pied de Gion + Higashiyama sud)\n• Chiyonoya (machiya 120 ans, près de Shirakawa river, calme)\n• Yoshi-Ima / 吉今 (familial, bâtiment de 1747)\n• Koto Inn (petite machiya, accès Higashiyama nord+sud)\nRéserver 3-6 mois avant — machiya = stock très limité.',
     coords:[35.0036, 135.7758] },
 
   // ============= TRANSPORTS =============
@@ -327,13 +343,25 @@ export const PROJECTS = [
     notes:'Hokuriku Shinkansen Kagayaki/Hakutaka. Direct.',
     coords:[36.6485, 138.1949], booking:true },
 
-  { id:'t005', city:'kanazawa', cat:'transport', name:'Kanazawa → Kyoto (Thunderbird)', nameJp:'サンダーバード',
-    priority:'MUST', status:'TODO', budget:7000, hours:'~2h15',
-    notes:'Limited Express Thunderbird. ⚠ Depuis 2024, changement à Tsuruga (~10 min).',
+  { id:'t005', city:'kanazawa', cat:'transport', name:'Kanazawa → Kyoto (Shinkansen + Thunderbird)', nameJp:'北陸新幹線+サンダーバード',
+    priority:'MUST', status:'TODO', budget:7800, hours:'~2h10',
+    notes:'⚠ Depuis le 16/03/2024, plus de Thunderbird direct Kanazawa↔Kyoto. Étapes :\n1. Hokuriku Shinkansen Kanazawa → Tsuruga (~50 min)\n2. Transfert Tsuruga (très court, tout est sur le même quai — courir si retard)\n3. Limited Express Thunderbird Tsuruga → Kyoto (~50 min)\nRéserver siège pour les 2 segments (~¥7800 total).',
     coords:[36.5613, 136.6562], booking:true },
 
   { id:'t006', city:'kyoto', cat:'transport', name:'Kyoto → Tokyo (retour vol)', nameJp:'のぞみ',
     priority:'MUST', status:'TODO', budget:14000, hours:'~2h15',
     notes:'Shinkansen Nozomi vers Tokyo / Haneda Airport Express. Réserver siège.',
     coords:[35.0116, 135.7681], booking:true },
+
+  // ============= INFOS SAISON =============
+  { id:'i001', city:'tokyo', cat:'festival', name:'⚠ Saison des pluies (tsuyu)', nameJp:'梅雨',
+    priority:'MUST', status:'TODO', budget:0, hours:'~7 juin → mi-juillet',
+    scheduledDate:'2026-06-07',
+    notes:'La saison des pluies 梅雨 démarre vers le 7 juin sur Kanto/Kansai. Attendez-vous à des averses (rarement journée entière), forte humidité, ciel gris. Côté positif : floraison des hortensias 紫陽花 et iris à Tokyo (Hakusan, Hase-dera Kamakura) et à Kyoto (Mimuroto-ji, Sanzen-in). Prévoir : parapluie pliant + veste légère imperméable, semelles antidérapantes pour Fushimi Inari/Arashiyama. Plan B indoor par jour d\'orage : musées (TeamLab, Ghibli, Edo-Tokyo), arcades, dépachika. ⚠ Vue Mont Fuji aléatoire en juin.',
+    coords:[35.6762, 139.6503], booking:false },
+
+  { id:'i002', city:'tokyo', cat:'nature', name:'Hortensias (ajisai) — spots juin', nameJp:'紫陽花',
+    priority:'NICE', status:'TODO', budget:500, hours:'pic mi-juin',
+    notes:'Saison des hortensias en plein dans nos dates. Spots :\n• Hakusan-jinja (Tokyo, gratuit)\n• Hase-dera Kamakura (~1h depuis Tokyo, ~¥500)\n• Meigetsu-in Kamakura (le "Ajisai-dera")\n• Mimuroto-ji (sud de Kyoto, 50 espèces, ~¥1000)\n• Sanzen-in à Ohara (Kyoto nord)',
+    coords:[35.7222, 139.7522], booking:false },
 ];
