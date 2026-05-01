@@ -202,6 +202,11 @@ export const PROJECTS = [
     notes:'Check-in 27 mai → check-out 4 juin (8 nuits, ~¥15k/nuit pour 2). Préférer Shinjuku/Shibuya/Shin-Okubo pour Yamanote + accès aéroport. Suggestions :\n• Hotel Gracery Shinjuku (immeuble Godzilla, Kabukicho, ~$155/nuit)\n• JR Kyushu Hotel Blossom Shinjuku (1min station, prix raisonnable)\n• Sotetsu Fresa Inn Higashi Shinjuku (Kabukicho, petit-déj inclus)\n• Best Hotel (Shin-Okubo, value)\nAlternatives moins chères : Ueno, Akihabara, Gotanda (sur Yamanote).',
     coords:[35.6938, 139.7036] },
 
+  { id:'p019', city:'tokyo', cat:'temple', name:'Suga Shrine — escalier Your Name', nameJp:'須賀神社',
+    priority:'MUST', status:'TODO', budget:0, hours:'24/7',
+    notes:'L\'escalier rouge iconique de la scène finale de Kimi no Na wa ("Are you the one I\'ve been searching for?"). Petit shrine très ordinaire à Yotsuya, célèbre uniquement pour ces marches. ~10 min à pied de Yotsuya-Sanchome (ligne Marunouchi) ou Yotsuya Station. Tôt le matin = pas de fans en photo. La visite tient en 15 min.',
+    coords:[35.6855, 139.7297], booking:false },
+
   // ============= KAWAGUCHIKO =============
   { id:'p020', city:'kawaguchiko', cat:'photo', name:'Chureito Pagoda', nameJp:'忠霊塔',
     priority:'MUST', status:'TODO', budget:0, hours:'24/7',
@@ -240,6 +245,23 @@ export const PROJECTS = [
     scheduledDate:'2026-06-06',
     notes:'Check-in 6 juin → check-out 8 juin (2 nuits). Suggestions :\n• Dormy Inn Matsumoto (onsen naturel + ramen offert le soir, 10min à pied du château) — option confort/onsen\n• Richmond Hotel Matsumoto (4★ proche château)\n• Tabino Hotel lit Matsumoto (5min station, very bien noté)\nRéserver 2-3 mois avant — Matsumoto est court mais demandé en saison.',
     coords:[36.2330, 137.9720] },
+
+  { id:'p033', city:'matsumoto', cat:'nature', name:'Lac Suwa — inspiration Your Name', nameJp:'諏訪湖',
+    priority:'MUST', status:'TODO', budget:1000, hours:'24/7', booking:false,
+    scheduledDate:'2026-06-06',
+    notes:'L\'inspiration directe du lac Itomori dans Kimi no Na wa (Makoto Shinkai est de Nagano, né à Koumi près de Suwa). À caler en escale 2-3h sur le trajet Kawaguchiko → Matsumoto : descendre à la gare de Kami-Suwa (上諏訪駅) sur la ligne Azusa Limited Express. Options sur place :\n• Promenade côté ville le long de la berge (~1h, gratuit)\n• Tour complet du lac à vélo électrique (~2h, ~¥1000 location à la gare)\n• Bateau-cygne sur le lac (~¥1500)\n⚠ Pour le "kataware-doki" (crépuscule iconique du film), arriver pour le coucher de soleil.',
+    coords:[36.0470, 138.1144] },
+
+  { id:'p034', city:'matsumoto', cat:'transport', name:'Resort View Furusato — train scénique Alpes', nameJp:'リゾートビューふるさと',
+    priority:'MUST', status:'TODO', budget:5000, hours:'~2h aller', booking:true,
+    scheduledDate:'2026-06-07',
+    notes:'Train touristique JR sur l\'Oito Line, Matsumoto → Minami-Otari (passe par Hakuba). Baies vitrées XL, sièges design, traverse les Alpes du Nord. Vibe vidéo relax YouTube garanti.\n⚠ Ne circule QUE certains jours (weekends + jours fériés selon saison) → vérifier le calendrier JR East 2026 plusieurs mois avant. RÉSERVER siège (places limitées).\nFormat conseillé : Matsumoto → Hakuba (~50 min) le matin, balade/déj à Hakuba, retour l\'après-midi. Aller-retour complet jusqu\'à Minami-Otari = ~5h.',
+    coords:[36.2398, 137.9710] },
+
+  { id:'p035', city:'matsumoto', cat:'photo', name:'Hida-Furukawa — gare Your Name', nameJp:'飛騨古川駅',
+    priority:'MAYBE', status:'TODO', budget:0, hours:'24/7', booking:false,
+    notes:'La gare et l\'arrêt de bus de la scène de recherche dans Kimi no Na wa (quand Taki cherche Mitsuha). Gare ordinaire, la visite tient en 30 min mais l\'émotion est là.\n⚠ DÉTOUR conséquent depuis Matsumoto :\n  Matsumoto → Takayama bus express (~2h30, scénique à travers les Alpes)\n  → Takayama → Hida-Furukawa JR Takayama Line (~15 min)\nAller-retour journée tendu mais possible. Idéal si on accepte d\'ajouter 1 nuit à Takayama (vieux quartier sake/bois sympa). Sinon, on laisse en MAYBE.',
+    coords:[36.2342, 137.1845] },
 
   // ============= NAGANO =============
   { id:'p040', city:'nagano', cat:'nature', name:'Jigokudani — singes des neiges', nameJp:'地獄谷野猿公苑',
@@ -328,9 +350,9 @@ export const PROJECTS = [
     notes:'⚠ Pas de shinkansen direct. Bus express Shinjuku → Kawaguchiko ~2h, ¥2000. Ou train via Otsuki.',
     coords:[35.6938, 139.7036], booking:true },
 
-  { id:'t002', city:'kawaguchiko', cat:'transport', name:'Kawaguchiko → Matsumoto', nameJp:'松本',
-    priority:'MUST', status:'TODO', budget:5000, hours:'~3h30',
-    notes:'Bus + train. Pas le plus simple. Alternative : retour Tokyo + Azusa Express vers Matsumoto.',
+  { id:'t002', city:'kawaguchiko', cat:'transport', name:'Kawaguchiko → Matsumoto (via Suwa)', nameJp:'河口湖→松本',
+    priority:'MUST', status:'TODO', budget:5500, hours:'~5h avec escale Suwa',
+    notes:'Pas de liaison directe, donc autant en profiter pour caser le Lac Suwa (p033) en escale.\nRoute recommandée :\n1. Bus express Kawaguchiko → Otsuki (~50 min, ¥1500)\n2. JR Azusa Limited Express Otsuki → Kami-Suwa (~1h, ¥3000) — descendre ici\n3. Pause Lac Suwa ~3h\n4. Azusa Kami-Suwa → Matsumoto (~50 min, ¥1500)\nAlternative directe (sans Suwa) : retour Tokyo (Shinjuku) + Azusa Shinjuku → Matsumoto (~2h45 direct, plus simple mais moins joli).',
     coords:[35.5117, 138.7669], booking:true },
 
   { id:'t003', city:'matsumoto', cat:'transport', name:'Matsumoto → Nagano', nameJp:'松本→長野',
