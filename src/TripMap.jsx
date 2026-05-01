@@ -21,66 +21,131 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
   const [pinPos, setPinPos] = useState({});
   const [route, setRoute] = useState(null);
   const [err, setErr] = useState(null);
-  const [t, setT] = useState(0);
-  // Zoom & pan
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
-  const dragRef = useRef(null);
-  const svgRef = useRef(null);
-  const wrapperRef = useRef(null);
-  const pointersRef = useRef(new Map());
-  const pinchRef = useRef(null);
 
-  // Wheel via addEventListener pour permettre preventDefault (passif en JSX React).
+  // Refs for high-frequency updates (avoid React re-renders during gesture)
+  const wrapperRef = useRef(null);
+  const svgRef = useRef(null);
+  const innerGRef = useRef(null);
+  const pinRefs = useRef(new Map()); // cid -> SVG <g>
+  const liveRef = useRef({ pan: { x: 0, y: 0 }, zoom: 1 });
+  const pinPosRef = useRef({});
+  const hoveredRef = useRef(null);
+  const rafRef = useRef(0);
+
+  // RAF-throttled DOM mutation : applique pan/zoom sur le <g> intérieur
+  // et le contre-scale 1/zoom sur chaque pin, sans re-render React.
+  const applyAll = () => {
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = 0;
+      const { pan: p, zoom: z } = liveRef.current;
+      const inner = innerGRef.current;
+      if (inner) {
+        inner.setAttribute(
+          'transform',
+          `translate(${TMAP_W / 2 + p.x} ${TMAP_H / 2 + p.y}) scale(${z}) translate(${-TMAP_W / 2} ${-TMAP_H / 2})`
+        );
+      }
+      const inv = 1 / z;
+      pinRefs.current.forEach((el, cid) => {
+        if (!el) return;
+        const pos = pinPosRef.current[cid]; if (!pos) return;
+        const isHover = hoveredRef.current === cid;
+        const s = (isHover ? 1.25 : 1) * inv;
+        el.setAttribute('transform', `translate(${pos[0]} ${pos[1]}) scale(${s})`);
+      });
+    });
+  };
+
+  // Garde les refs en phase avec l'état React et redessine
+  useEffect(() => { pinPosRef.current = pinPos; applyAll(); }, [pinPos]);
+  useEffect(() => { hoveredRef.current = hoveredCity; applyAll(); }, [hoveredCity]);
+  useEffect(() => { liveRef.current = { pan, zoom }; applyAll(); }, [pan, zoom]);
+
+  // Bind pointer + wheel ONCE — toutes les mutations passent par liveRef + applyAll
   useEffect(() => {
     const el = wrapperRef.current;
     if (!el) return;
+    const pointers = new Map();
+    let dragStart = null;
+    let pinch = null;
+    let wheelTimer = 0;
+
     const onWheel = (e) => {
       e.preventDefault();
       const delta = -e.deltaY * 0.0015;
-      setZoom(z => Math.max(0.6, Math.min(5, z * (1 + delta))));
+      const newZoom = Math.max(0.6, Math.min(5, liveRef.current.zoom * (1 + delta)));
+      liveRef.current = { ...liveRef.current, zoom: newZoom };
+      applyAll();
+      clearTimeout(wheelTimer);
+      wheelTimer = setTimeout(() => setZoom(liveRef.current.zoom), 180);
     };
+
+    const onPointerDown = (e) => {
+      if (e.target.closest('button, [data-no-pan]')) return;
+      el.setPointerCapture(e.pointerId);
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      el.classList.add('dragging');
+      if (pointers.size === 1) {
+        dragStart = { x: e.clientX, y: e.clientY, panX: liveRef.current.pan.x, panY: liveRef.current.pan.y };
+        pinch = null;
+      } else if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        pinch = { dist: Math.hypot(a.x - b.x, a.y - b.y), startZoom: liveRef.current.zoom };
+        dragStart = null;
+      }
+    };
+    const onPointerMove = (e) => {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2 && pinch) {
+        const [a, b] = [...pointers.values()];
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        const ratio = d / pinch.dist;
+        liveRef.current = { ...liveRef.current, zoom: Math.max(0.6, Math.min(5, pinch.startZoom * ratio)) };
+        applyAll();
+      } else if (pointers.size === 1 && dragStart) {
+        const dx = e.clientX - dragStart.x;
+        const dy = e.clientY - dragStart.y;
+        liveRef.current = { ...liveRef.current, pan: { x: dragStart.panX + dx, y: dragStart.panY + dy } };
+        applyAll();
+      }
+    };
+    const onPointerUp = (e) => {
+      pointers.delete(e.pointerId);
+      if (pointers.size < 2) pinch = null;
+      if (pointers.size === 0) {
+        dragStart = null;
+        el.classList.remove('dragging');
+        // Commit final live → React (pour footer "zoom×N" + persistance)
+        setZoom(liveRef.current.zoom);
+        setPan(liveRef.current.pan);
+      }
+      if (pointers.size === 1) {
+        const [p] = [...pointers.values()];
+        dragStart = { x: p.x, y: p.y, panX: liveRef.current.pan.x, panY: liveRef.current.pan.y };
+      }
+    };
+
     el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
+    el.addEventListener('pointerdown', onPointerDown);
+    el.addEventListener('pointermove', onPointerMove);
+    el.addEventListener('pointerup', onPointerUp);
+    el.addEventListener('pointercancel', onPointerUp);
+
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('pointerdown', onPointerDown);
+      el.removeEventListener('pointermove', onPointerMove);
+      el.removeEventListener('pointerup', onPointerUp);
+      el.removeEventListener('pointercancel', onPointerUp);
+      clearTimeout(wheelTimer);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
-  const onPointerDown = (e) => {
-    if (e.target.closest('button, [data-no-pan]')) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pointersRef.current.size === 1) {
-      dragRef.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
-      pinchRef.current = null;
-    } else if (pointersRef.current.size === 2) {
-      const [a, b] = [...pointersRef.current.values()];
-      pinchRef.current = { dist: Math.hypot(a.x - b.x, a.y - b.y), startZoom: zoom };
-      dragRef.current = null;
-    }
-  };
-  const onPointerMove = (e) => {
-    if (!pointersRef.current.has(e.pointerId)) return;
-    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pointersRef.current.size === 2 && pinchRef.current) {
-      const [a, b] = [...pointersRef.current.values()];
-      const d = Math.hypot(a.x - b.x, a.y - b.y);
-      const ratio = d / pinchRef.current.dist;
-      setZoom(Math.max(0.6, Math.min(5, pinchRef.current.startZoom * ratio)));
-    } else if (pointersRef.current.size === 1 && dragRef.current) {
-      const dx = e.clientX - dragRef.current.x;
-      const dy = e.clientY - dragRef.current.y;
-      setPan({ x: dragRef.current.panX + dx, y: dragRef.current.panY + dy });
-    }
-  };
-  const onPointerUp = (e) => {
-    pointersRef.current.delete(e.pointerId);
-    if (pointersRef.current.size < 2) pinchRef.current = null;
-    if (pointersRef.current.size === 0) dragRef.current = null;
-    if (pointersRef.current.size === 1) {
-      // Reprendre un drag depuis le doigt restant
-      const [p] = [...pointersRef.current.values()];
-      dragRef.current = { x: p.x, y: p.y, panX: pan.x, panY: pan.y };
-    }
-  };
   const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
 
   useEffect(() => {
@@ -136,25 +201,22 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
     return () => { cancelled = true; };
   }, [cities, itinerary]);
 
-  useEffect(() => {
-    if (!animations) return;
-    let id, start = performance.now();
-    const tick = () => { setT((performance.now() - start) / 1000); id = requestAnimationFrame(tick); };
-    id = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(id);
-  }, [animations]);
-
   // Compte les projets par ville
   const byCity = {};
   projects.forEach(p => { (byCity[p.city] = byCity[p.city] || []).push(p); });
 
   return (
     <div ref={wrapperRef}
-         style={{ position: 'relative', width: '100%', aspectRatio: `${TMAP_W} / ${TMAP_H}`, touchAction: 'none' }}
-         onPointerDown={onPointerDown}
-         onPointerMove={onPointerMove}
-         onPointerUp={onPointerUp}
-         onPointerCancel={onPointerUp}>
+         className="trip-map-wrapper"
+         style={{
+           position: 'relative', width: '100%',
+           aspectRatio: `${TMAP_W} / ${TMAP_H}`,
+           maxHeight: 'min(80vh, 820px)',
+           maxWidth: 'calc(min(80vh, 820px) * 1000 / 900)',
+           margin: '0 auto',
+           touchAction: 'none',
+           userSelect: 'none', WebkitUserSelect: 'none',
+         }}>
       {/* Zoom controls */}
       <div data-no-pan style={{ position: 'absolute', top: 10, right: 10, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <button className="btn sm" onClick={() => setZoom(z => Math.min(5, z * 1.3))} style={{ padding: '4px 10px', fontSize: 18, lineHeight: 1 }}>+</button>
@@ -165,7 +227,7 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
         <span className="sticker">pinch / scroll = zoom · drag = bouger</span>
       </div>
       <svg ref={svgRef} viewBox={`0 0 ${TMAP_W} ${TMAP_H}`} preserveAspectRatio="xMidYMid meet"
-           style={{ width: '100%', height: '100%', display: 'block', cursor: dragRef.current ? 'grabbing' : 'grab' }}>
+           style={{ width: '100%', height: '100%', display: 'block', cursor: 'grab' }}>
         <defs>
           <pattern id="tdots" width="14" height="14" patternUnits="userSpaceOnUse">
             <circle cx="2" cy="2" r="1.2" fill="rgba(0,0,0,.18)" />
@@ -180,14 +242,15 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
 
         <rect width={TMAP_W} height={TMAP_H} fill="url(#tdots)" opacity="0.5" />
         <rect width={TMAP_W} height={TMAP_H} fill="url(#twave)" opacity="0.35" />
-        <g transform={`translate(${TMAP_W / 2 + pan.x} ${TMAP_H / 2 + pan.y}) scale(${zoom}) translate(${-TMAP_W / 2} ${-TMAP_H / 2})`}>
+        <g ref={innerGRef}
+           transform={`translate(${TMAP_W / 2 + pan.x} ${TMAP_H / 2 + pan.y}) scale(${zoom}) translate(${-TMAP_W / 2} ${-TMAP_H / 2})`}>
           <g clipPath="url(#trip-clip)">
 
-            {/* Sakura petals deco */}
+            {/* Sakura petals deco (statiques pour éviter les re-renders 60Hz) */}
             {Array.from({ length: 18 }).map((_, i) => {
               const x = (i * 73 + 30) % (TMAP_W - 20);
               const y = (i * 101 + 40) % (TMAP_H - 20);
-              const rot = (i * 37) + (animations ? t * 8 : 0);
+              const rot = i * 37;
               return <g key={i} transform={`translate(${x} ${y}) rotate(${rot})`} opacity="0.35" style={{ pointerEvents: 'none' }}>
                 <path d="M0 -4 C2 -4 4 -2 4 0 C4 2 2 4 0 4 C-2 4 -4 2 -4 0 C-4 -2 -2 -4 0 -4Z" fill="#ff8fb8" />
               </g>;
@@ -241,13 +304,17 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
               const count = (byCity[cid] || []).length;
               const main = c.color;
               const seg = c.segment;
-              const pulse = animations ? (1 + Math.sin(t * 3 + px * 0.01) * 0.06) : 1;
-              // Counter-scale so pins stay visually constant size regardless of zoom
               const inv = 1 / zoom;
-              const finalScale = (isHover ? 1.25 : pulse) * inv;
+              const finalScale = (isHover ? 1.25 : 1) * inv;
               return (
-                <g key={cid} transform={`translate(${px} ${py}) scale(${finalScale})`}
-                   style={{ cursor: 'pointer', transition: 'transform .2s' }}
+                <g key={cid}
+                   ref={(el) => {
+                     if (el) pinRefs.current.set(cid, el);
+                     else pinRefs.current.delete(cid);
+                   }}
+                   className="trip-pin"
+                   transform={`translate(${px} ${py}) scale(${finalScale})`}
+                   style={{ cursor: 'pointer', transition: 'transform .2s', willChange: 'transform' }}
                    onMouseEnter={() => setHoveredCity(cid)} onMouseLeave={() => setHoveredCity(null)}
                    onClick={() => onPickCity(cid)}>
                   {animations && <circle r="22" fill={main} opacity="0.3">

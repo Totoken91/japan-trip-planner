@@ -293,6 +293,11 @@ body[data-anim="off"] *, body[data-anim="off"] *::before, body[data-anim="off"] 
 }
 .slide-in { animation: slide-in-up .4s cubic-bezier(.3,1.4,.5,1) both; }
 
+/* TripMap : pendant un drag/pinch, désactiver la transition pour éviter le retard
+   visuel des pins, et passer le curseur en grabbing. */
+.trip-map-wrapper.dragging svg { cursor: grabbing !important; }
+.trip-map-wrapper.dragging .trip-pin { transition: none !important; }
+
 /* ───────── Mobile (≤ 640px) ───────── */
 @media (max-width: 640px) {
   .app-header { padding: 12px 14px !important; }
