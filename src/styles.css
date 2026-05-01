@@ -293,12 +293,21 @@ body[data-anim="off"] *, body[data-anim="off"] *::before, body[data-anim="off"] 
 }
 .slide-in { animation: slide-in-up .4s cubic-bezier(.3,1.4,.5,1) both; }
 
-/* TripMap : pendant un drag/pinch, désactiver la transition pour éviter le retard
-   visuel des pins, et passer le curseur en grabbing.
-   pointer-events:none sur les pins coupe les mouseEnter/Leave qui sinon
-   déclencheraient des re-renders React parasites. */
+/* TripMap : pendant un drag/pinch/zoom, désactiver les éléments coûteux
+   (47 ombres, 5 highlights pointillés, route avec dasharray) — ils reviennent
+   220ms après la dernière action. Les fills restent mais sans stroke. */
 .trip-map-wrapper.dragging svg { cursor: grabbing !important; }
-.trip-map-wrapper.dragging .trip-pin { transition: none !important; pointer-events: none; }
+.trip-map-wrapper.dragging .trip-pin,
+.trip-map-wrapper.zooming .trip-pin { transition: none !important; }
+.trip-map-wrapper.dragging .trip-pin { pointer-events: none; }
+.trip-map-wrapper.dragging .map-shadow,
+.trip-map-wrapper.zooming .map-shadow,
+.trip-map-wrapper.dragging .map-highlights,
+.trip-map-wrapper.zooming .map-highlights,
+.trip-map-wrapper.dragging .map-route,
+.trip-map-wrapper.zooming .map-route { display: none; }
+.trip-map-wrapper.dragging .map-fills path,
+.trip-map-wrapper.zooming .map-fills path { stroke: none; }
 
 /* ───────── Mobile (≤ 640px) ───────── */
 @media (max-width: 640px) {

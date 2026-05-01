@@ -80,15 +80,16 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
       const delta = -e.deltaY * 0.0015;
       const newZoom = Math.max(0.6, Math.min(5, liveRef.current.zoom * (1 + delta)));
       liveRef.current = { ...liveRef.current, zoom: newZoom };
-      // Pause SMIL pendant la rafale wheel pour libérer le compositor.
+      // Active le mode "interaction" : strokes/highlights/ombres masqués via CSS,
+      // SMIL pausé. Tout revient 220ms après la dernière rafale.
+      el.classList.add('zooming');
       try { svgRef.current?.pauseAnimations?.(); } catch {}
       applyAll();
       clearTimeout(wheelTimer);
-      // Pas de commit React : footerRef met à jour l'affichage zoom×N en live.
-      // Reprise des animations 200ms après la dernière rafale.
       wheelTimer = setTimeout(() => {
+        el.classList.remove('zooming');
         try { svgRef.current?.unpauseAnimations?.(); } catch {}
-      }, 200);
+      }, 220);
     };
 
     let isDragging = false;  // n'active la classe + pause SMIL qu'après mouvement réel
@@ -274,16 +275,6 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
            transform={`translate(${TMAP_W / 2 + pan.x} ${TMAP_H / 2 + pan.y}) scale(${zoom}) translate(${-TMAP_W / 2} ${-TMAP_H / 2})`}>
           <g clipPath="url(#trip-clip)">
 
-            {/* Sakura petals deco (statiques pour éviter les re-renders 60Hz) */}
-            {Array.from({ length: 18 }).map((_, i) => {
-              const x = (i * 73 + 30) % (TMAP_W - 20);
-              const y = (i * 101 + 40) % (TMAP_H - 20);
-              const rot = i * 37;
-              return <g key={i} transform={`translate(${x} ${y}) rotate(${rot})`} opacity="0.35" style={{ pointerEvents: 'none' }}>
-                <path d="M0 -4 C2 -4 4 -2 4 0 C4 2 2 4 0 4 C-2 4 -4 2 -4 0 C-4 -2 -2 -4 0 -4Z" fill="#ff8fb8" />
-              </g>;
-            })}
-
             {!paths && !err && (
               <text x={TMAP_W/2} y={TMAP_H/2} textAnchor="middle" fontFamily="'DotGothic16', monospace" fontSize="18" fill="#111">// loading map...</text>
             )}
@@ -293,26 +284,34 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
 
             {/* Country shadow — 1 seul opacity blend pour les 47 paths */}
             {paths && (
-              <g opacity="0.14" transform="translate(4 5)">
+              <g className="map-shadow" opacity="0.14" transform="translate(4 5)">
                 {paths.map((p, i) => (
                   <path key={'sh-' + i} d={p.d} fill="#111" />
                 ))}
               </g>
             )}
             {/* Country fills with tier */}
-            {paths && paths.map((p, i) => {
-              const fill = p.tier === 'hl' ? '#ffe9b3' : '#fff5d9';
-              return <path key={'p-' + i} d={p.d} fill={fill} stroke="#111" strokeWidth={1.4} strokeLinejoin="round" />;
-            })}
+            {paths && (
+              <g className="map-fills">
+                {paths.map((p, i) => {
+                  const fill = p.tier === 'hl' ? '#ffe9b3' : '#fff5d9';
+                  return <path key={'p-' + i} d={p.d} fill={fill} stroke="#111" strokeWidth={1.4} strokeLinejoin="round" />;
+                })}
+              </g>
+            )}
 
             {/* Highlight outline on trip prefectures */}
-            {paths && paths.filter(p => p.tier === 'hl').map((p, i) => (
-              <path key={'hl-' + i} d={p.d} fill="none" stroke="#ff3ea5" strokeWidth="2.5" strokeDasharray="6 4" strokeLinejoin="round" opacity="0.85" />
-            ))}
+            {paths && (
+              <g className="map-highlights">
+                {paths.filter(p => p.tier === 'hl').map((p, i) => (
+                  <path key={'hl-' + i} d={p.d} fill="none" stroke="#ff3ea5" strokeWidth="2.5" strokeDasharray="6 4" strokeLinejoin="round" opacity="0.85" />
+                ))}
+              </g>
+            )}
 
             {/* Route polyline */}
             {route && route.length > 1 && (
-              <g style={{ pointerEvents: 'none' }}>
+              <g className="map-route" style={{ pointerEvents: 'none' }}>
                 <polyline
                   points={route.map(([x, y]) => `${x},${y}`).join(' ')}
                   fill="none" stroke="#111" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"
