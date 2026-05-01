@@ -293,6 +293,19 @@ body[data-anim="off"] *, body[data-anim="off"] *::before, body[data-anim="off"] 
 }
 .slide-in { animation: slide-in-up .4s cubic-bezier(.3,1.4,.5,1) both; }
 
+/* Bandeau "voyage prévisionnel" pour les trips meta.hidden=true (Okinawa, etc.) */
+.future-trip-banner {
+  background: #fbbf24;
+  border-bottom: 3px solid var(--ink);
+  padding: 8px 14px;
+  font-family: 'DotGothic16', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  color: #111;
+}
+.future-trip-banner a { color: #111; text-decoration: underline; }
+
 /* TripMap : pendant un drag/pinch/zoom, désactiver les éléments coûteux
    (47 ombres, 5 highlights pointillés, route avec dasharray) — ils reviennent
    220ms après la dernière action. Les fills restent mais sans stroke. */

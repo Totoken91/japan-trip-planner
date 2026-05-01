@@ -1,6 +1,8 @@
 // Japan Trip Planner — données du voyage
 // 27 mai → 17 juin 2026 · Tokyo → Kawaguchiko → Matsumoto → Nagano → Kanazawa → Kyoto
 
+import { OKINAWA_FUTURE } from './dataOkinawa.js';
+
 export const TRIP = {
   startDate: '2026-05-27',
   endDate: '2026-06-17',
@@ -387,3 +389,19 @@ export const PROJECTS = [
     notes:'Saison des hortensias en plein dans nos dates. Spots :\n• Hakusan-jinja (Tokyo, gratuit)\n• Hase-dera Kamakura (~1h depuis Tokyo, ~¥500)\n• Meigetsu-in Kamakura (le "Ajisai-dera")\n• Mimuroto-ji (sud de Kyoto, 50 espèces, ~¥1000)\n• Sanzen-in à Ohara (Kyoto nord)',
     coords:[35.7222, 139.7522], booking:false },
 ];
+
+// ============= MULTI-VOYAGE =============
+// Les exports nommés ci-dessus restent pour rétrocompat ; chaque voyage est
+// aussi accessible via TRIPS pour le sélecteur dynamique d'App.jsx.
+
+const HONSHU_2026 = {
+  meta: { ...TRIP, id:'honshu2026', label:'Japon 2026 (Honshu)', hidden:false, mapFocus:'honshu' },
+  cities: CITIES,
+  itinerary: ITINERARY,
+  projects: PROJECTS,
+};
+
+export const TRIPS = {
+  honshu2026: HONSHU_2026,
+  okinawaFuture: OKINAWA_FUTURE,
+};

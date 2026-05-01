@@ -11,12 +11,16 @@ const TRIP_TOPO_URLS = [
 // Préfectures à mettre en avant (id japan.topojson)
 // 13=Tokyo, 19=Yamanashi (Fuji), 20=Nagano, 17=Ishikawa (Kanazawa), 26=Kyoto
 const TRIP_HIGHLIGHT = new Set([13, 19, 20, 17, 26]);
-// Okinawa exclu pour ne pas tirer le cadrage trop au sud
+// Okinawa exclu pour ne pas tirer le cadrage trop au sud (en mode Honshu)
 const SKIP_PREF = new Set([47]);
+// Pour le mode Okinawa : ne garder QUE la pref 47 (île principale d'Okinawa).
+// Yaeyama (Ishigaki) et Miyako ne sont pas dans ce topojson — leurs pins
+// flotteront sur le fond, ce qui suffit visuellement.
+const OKINAWA_PREF = new Set([47]);
 
 const TMAP_W = 1000, TMAP_H = 900;
 
-export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, setHoveredCity, animations }) {
+export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, setHoveredCity, animations, mapFocus = 'honshu' }) {
   const [paths, setPaths] = useState(null);
   const [pinPos, setPinPos] = useState({});
   const [route, setRoute] = useState(null);
@@ -187,14 +191,27 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
         if (cancelled) return;
 
         const featCol = topoFeature(topo, topo.objects.japan);
+        const isOkinawa = mapFocus === 'okinawa';
+        // Sélection des préfectures à dessiner selon le voyage
         const all = featCol.features.filter(f => {
           const id = f.properties?.id ?? f.id;
-          return !SKIP_PREF.has(id);
+          return isOkinawa ? OKINAWA_PREF.has(id) : !SKIP_PREF.has(id);
         });
-        // Cadrage sur tout le Japon (Hokkaido inclus, Okinawa exclu)
+        // Cadrage : Honshu → sur l'ensemble des features ; Okinawa → sur les
+        // points des villes (l'archipel Yaeyama/Miyako n'a pas de shape, on
+        // veut juste que les pins rentrent dans le viewport).
+        const fitTarget = isOkinawa
+          ? {
+              type: 'FeatureCollection',
+              features: Object.values(cities).map(c => ({
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [c.coords[1], c.coords[0]] },
+              })),
+            }
+          : { type: 'FeatureCollection', features: all };
         const proj = geoMercator().fitExtent(
-          [[30, 40], [TMAP_W - 30, TMAP_H - 40]],
-          { type: 'FeatureCollection', features: all }
+          [[60, 60], [TMAP_W - 60, TMAP_H - 60]],
+          fitTarget
         );
         const path = geoPath(proj);
         const allPaths = all.map(f => {
@@ -226,7 +243,7 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
       }
     })();
     return () => { cancelled = true; };
-  }, [cities, itinerary]);
+  }, [cities, itinerary, mapFocus]);
 
   // Compte les projets par ville
   const byCity = {};

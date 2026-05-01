@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { TRIP, CITIES, ITINERARY, CATEGORIES, PROJECTS } from './data.js';
+import { CATEGORIES, TRIPS } from './data.js';
 import {
   ProjectCard, ProjectModal, AddProjectModal,
   TripCalendar, ItineraryStrip,
@@ -25,9 +25,25 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 const FONT_DISPLAY_OPTIONS = ['Bagel Fat One','Reggae One','RocknRoll One','Yusei Magic'];
 const FONT_JP_OPTIONS = ['Zen Maru Gothic','Reggae One','RocknRoll One','Yusei Magic'];
 
-const LS_PROJECTS = 'jtp_projects_v1';
-const LS_PHOTOS = 'jtp_photos_v1';
-const LS_ITIN = 'jtp_itin_v1';
+// Sélection du voyage actif via URL : /?trip=okinawaFuture pour la section cachée.
+// Par défaut = Honshu 2026.
+const tripId = (() => {
+  if (typeof window === 'undefined') return 'honshu2026';
+  const p = new URLSearchParams(window.location.search).get('trip');
+  return TRIPS[p] ? p : 'honshu2026';
+})();
+const ACTIVE_TRIP = TRIPS[tripId];
+const TRIP = ACTIVE_TRIP.meta;
+const CITIES = ACTIVE_TRIP.cities;
+const ITINERARY = ACTIVE_TRIP.itinerary;
+const PROJECTS = ACTIVE_TRIP.projects;
+
+// Clés localStorage scopées au trip pour ne pas mélanger les édits Honshu/Okinawa.
+const LS_PROJECTS = `jtp_projects_${tripId}_v1`;
+const LS_PHOTOS = `jtp_photos_${tripId}_v1`;
+const LS_ITIN = `jtp_itin_${tripId}_v1`;
+
+const [Y, M] = TRIP.startDate.split('-').map(Number);
 
 export default function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
@@ -41,8 +57,8 @@ export default function App() {
   const [filterCat, setFilterCat] = useState('all');
   const [filterPrio, setFilterPrio] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [calMonth, setCalMonth] = useState(4);
-  const [calYear, setCalYear] = useState(2026);
+  const [calMonth, setCalMonth] = useState(M - 1);
+  const [calYear, setCalYear] = useState(Y);
 
   const [projects, setProjects] = useState(() => {
     try {
@@ -152,12 +168,19 @@ export default function App() {
 
   const onPickCity = (cid) => { setCurrentCity(cid); setView('list'); };
 
+  const cityRoute = Object.values(CITIES).map(c => c.name.toUpperCase()).join(' → ');
+  const marqueeLine = `★ 日本旅行 ★ ${TRIP.label.toUpperCase()} ★ ${cityRoute} ★ ${stats.count} PROJETS ★ ${stats.booking} À RÉSERVER ★ ${stats.done}/${stats.count} FAIT ★  `;
+
   return (
     <div style={{minHeight:'100vh'}}>
+      {TRIP.hidden && (
+        <div className="future-trip-banner">
+          🌴 {TRIP.label} — VOYAGE PRÉVISIONNEL · <a href="?">retour Honshu 2026</a>
+        </div>
+      )}
       <div className={`marquee ${t.animations?'':'no-anim'}`}>
         <div className="marquee-track">
-          ★ 日本旅行 ★ JAPAN TRIP 2026 ★ TOKYO → FUJI → MATSUMOTO → NAGANO → KANAZAWA → KYOTO ★ 27 MAI 〜 17 JUIN ★ {stats.count} PROJETS ★ {stats.booking} À RÉSERVER ★ {stats.done}/{stats.count} FAIT ★&nbsp;&nbsp;
-          ★ 日本旅行 ★ JAPAN TRIP 2026 ★ TOKYO → FUJI → MATSUMOTO → NAGANO → KANAZAWA → KYOTO ★ 27 MAI 〜 17 JUIN ★ {stats.count} PROJETS ★ {stats.booking} À RÉSERVER ★ {stats.done}/{stats.count} FAIT ★&nbsp;&nbsp;
+          {marqueeLine}{marqueeLine}
         </div>
       </div>
 
@@ -249,7 +272,7 @@ export default function App() {
               <TripMap projects={projects} cities={CITIES} itinerary={itinerary}
                 onPickCity={onPickCity}
                 hoveredCity={hoveredCity} setHoveredCity={setHoveredCity}
-                animations={t.animations}/>
+                animations={t.animations} mapFocus={TRIP.mapFocus}/>
             </div>
             <div style={{display:'flex', flexDirection:'column', gap:14, minWidth:0}}>
               <div className="card" style={{padding:14}}>
@@ -471,6 +494,16 @@ export default function App() {
         <TweakSection label="Affichage"/>
         <TweakToggle label="Animations" value={t.animations} onChange={v=>setTweak('animations', v)}/>
         <TweakToggle label="Mode sombre" value={t.dark} onChange={v=>setTweak('dark', v)}/>
+
+        <TweakSection label="Voyage (caché)"/>
+        <div style={{padding:'4px 8px'}}>
+          <select value={tripId}
+            onChange={e => { window.location.search = `?trip=${e.target.value}`; }}
+            style={{width:'100%', padding:'6px 8px', border:'2px solid var(--ink)', borderRadius:6, fontFamily:'inherit', fontSize:13}}>
+            <option value="honshu2026">Japon 2026 (Honshu)</option>
+            <option value="okinawaFuture">🌴 Okinawa (futur)</option>
+          </select>
+        </div>
       </TweaksPanel>
     </div>
   );
