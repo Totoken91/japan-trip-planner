@@ -46,6 +46,9 @@ body {
 .font-jp { font-family: 'Zen Maru Gothic', system-ui; font-weight: 900; }
 .font-mono { font-family: 'DotGothic16', 'JetBrains Mono', monospace; }
 
+/* Évite les longues chaînes qui débordent des cartes */
+.font-display, .font-jp, .card, .event-card { overflow-wrap: anywhere; word-break: break-word; }
+
 /* Brutalist card */
 .card {
   background: #fff;
@@ -277,3 +280,35 @@ body[data-anim="off"] *, body[data-anim="off"] *::before, body[data-anim="off"] 
   to { opacity: 1; transform: translateY(0) rotate(0); }
 }
 .slide-in { animation: slide-in-up .4s cubic-bezier(.3,1.4,.5,1) both; }
+
+/* ───────── Mobile (≤ 640px) ───────── */
+@media (max-width: 640px) {
+  .app-header { padding: 12px 14px !important; }
+
+  /* Onglets : gap au lieu de chevauchement, coins arrondis sur tous */
+  .tabs { gap: 6px; }
+  .tab {
+    margin-right: 0;
+    padding: 8px 12px;
+    font-size: 12px;
+    border-radius: 10px;
+    flex: 1 1 calc(50% - 6px);
+    min-width: 0;
+    text-align: center;
+  }
+  .tab:first-child, .tab:last-child { border-radius: 10px; }
+
+  /* Marquee : taille réduite, sinon ça mange l'écran */
+  .marquee-track { font-size: 16px; }
+  .marquee { padding: 8px 0; }
+
+  /* Filter chips : laisse l'espace respirer */
+  .filter-chip { padding: 6px 10px; font-size: 11px; }
+
+  /* Cartes : ombres moins agressives pour ne pas pousser de scroll horizontal */
+  .card { box-shadow: 4px 4px 0 var(--ink); }
+  .btn { box-shadow: 2px 2px 0 var(--ink); }
+
+  /* Cellules calendrier plus respirantes */
+  .cal-day { padding: 4px; font-size: 10px; }
+}

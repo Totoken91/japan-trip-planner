@@ -11,12 +11,10 @@ const TRIP_TOPO_URLS = [
 // Préfectures à mettre en avant (id japan.topojson)
 // 13=Tokyo, 19=Yamanashi (Fuji), 20=Nagano, 17=Ishikawa (Kanazawa), 26=Kyoto
 const TRIP_HIGHLIGHT = new Set([13, 19, 20, 17, 26]);
-// Préfectures voisines pour le contexte visuel — resserré sur Honshu central
-const TRIP_CONTEXT = new Set([8, 9, 10, 11, 12, 14, 15, 16, 18, 21, 22, 23, 24, 25, 27, 28]);
-// Préfectures utilisées UNIQUEMENT pour le cadrage (fitExtent) — resserre la vue
-const TRIP_FRAME = new Set([13, 19, 20, 17, 26, 15, 16, 18, 21, 22, 23, 24, 25, 9, 10, 11, 12, 14, 8]);
+// Okinawa exclu pour ne pas tirer le cadrage trop au sud
+const SKIP_PREF = new Set([47]);
 
-const TMAP_W = 1000, TMAP_H = 600;
+const TMAP_W = 1000, TMAP_H = 900;
 
 export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, setHoveredCity, animations }) {
   const [paths, setPaths] = useState(null);
@@ -29,22 +27,60 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const dragRef = useRef(null);
   const svgRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const pointersRef = useRef(new Map());
+  const pinchRef = useRef(null);
 
-  const onWheel = (e) => {
-    e.preventDefault();
-    const delta = -e.deltaY * 0.0015;
-    setZoom(z => Math.max(0.6, Math.min(5, z * (1 + delta))));
+  // Wheel via addEventListener pour permettre preventDefault (passif en JSX React).
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const onWheel = (e) => {
+      e.preventDefault();
+      const delta = -e.deltaY * 0.0015;
+      setZoom(z => Math.max(0.6, Math.min(5, z * (1 + delta))));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
+
+  const onPointerDown = (e) => {
+    if (e.target.closest('button, [data-no-pan]')) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointersRef.current.size === 1) {
+      dragRef.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
+      pinchRef.current = null;
+    } else if (pointersRef.current.size === 2) {
+      const [a, b] = [...pointersRef.current.values()];
+      pinchRef.current = { dist: Math.hypot(a.x - b.x, a.y - b.y), startZoom: zoom };
+      dragRef.current = null;
+    }
   };
-  const onMouseDown = (e) => {
-    dragRef.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y };
+  const onPointerMove = (e) => {
+    if (!pointersRef.current.has(e.pointerId)) return;
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointersRef.current.size === 2 && pinchRef.current) {
+      const [a, b] = [...pointersRef.current.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      const ratio = d / pinchRef.current.dist;
+      setZoom(Math.max(0.6, Math.min(5, pinchRef.current.startZoom * ratio)));
+    } else if (pointersRef.current.size === 1 && dragRef.current) {
+      const dx = e.clientX - dragRef.current.x;
+      const dy = e.clientY - dragRef.current.y;
+      setPan({ x: dragRef.current.panX + dx, y: dragRef.current.panY + dy });
+    }
   };
-  const onMouseMove = (e) => {
-    if (!dragRef.current) return;
-    const dx = e.clientX - dragRef.current.x;
-    const dy = e.clientY - dragRef.current.y;
-    setPan({ x: dragRef.current.panX + dx, y: dragRef.current.panY + dy });
+  const onPointerUp = (e) => {
+    pointersRef.current.delete(e.pointerId);
+    if (pointersRef.current.size < 2) pinchRef.current = null;
+    if (pointersRef.current.size === 0) dragRef.current = null;
+    if (pointersRef.current.size === 1) {
+      // Reprendre un drag depuis le doigt restant
+      const [p] = [...pointersRef.current.values()];
+      dragRef.current = { x: p.x, y: p.y, panX: pan.x, panY: pan.y };
+    }
   };
-  const onMouseUp = () => { dragRef.current = null; };
   const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
 
   useEffect(() => {
@@ -59,21 +95,19 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
         if (cancelled) return;
 
         const featCol = topoFeature(topo, topo.objects.japan);
-        const all = featCol.features;
-        // Cadrage sur Honshu central uniquement
-        const frame = all.filter(f => {
+        const all = featCol.features.filter(f => {
           const id = f.properties?.id ?? f.id;
-          return TRIP_FRAME.has(id);
+          return !SKIP_PREF.has(id);
         });
+        // Cadrage sur tout le Japon (Hokkaido inclus, Okinawa exclu)
         const proj = geoMercator().fitExtent(
-          [[30, 50], [TMAP_W - 30, TMAP_H - 50]],
-          { type: 'FeatureCollection', features: frame }
+          [[30, 40], [TMAP_W - 30, TMAP_H - 40]],
+          { type: 'FeatureCollection', features: all }
         );
         const path = geoPath(proj);
-        // Render TOUTES les préfectures pour garder le contour du Japon, mais distinguer 3 tiers
         const allPaths = all.map(f => {
           const id = f.properties?.id ?? f.id;
-          const tier = TRIP_HIGHLIGHT.has(id) ? 'hl' : (TRIP_CONTEXT.has(id) ? 'ctx' : 'far');
+          const tier = TRIP_HIGHLIGHT.has(id) ? 'hl' : 'ctx';
           return {
             id, d: path(f), tier,
             name: f.properties?.nam_ja || f.properties?.nam || '',
@@ -115,20 +149,20 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
   projects.forEach(p => { (byCity[p.city] = byCity[p.city] || []).push(p); });
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}
-         onWheel={onWheel}
-         onMouseDown={onMouseDown}
-         onMouseMove={onMouseMove}
-         onMouseUp={onMouseUp}
-         onMouseLeave={onMouseUp}>
+    <div ref={wrapperRef}
+         style={{ position: 'relative', width: '100%', aspectRatio: `${TMAP_W} / ${TMAP_H}`, touchAction: 'none' }}
+         onPointerDown={onPointerDown}
+         onPointerMove={onPointerMove}
+         onPointerUp={onPointerUp}
+         onPointerCancel={onPointerUp}>
       {/* Zoom controls */}
-      <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div data-no-pan style={{ position: 'absolute', top: 10, right: 10, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <button className="btn sm" onClick={() => setZoom(z => Math.min(5, z * 1.3))} style={{ padding: '4px 10px', fontSize: 18, lineHeight: 1 }}>+</button>
         <button className="btn sm" onClick={() => setZoom(z => Math.max(0.6, z / 1.3))} style={{ padding: '4px 10px', fontSize: 18, lineHeight: 1 }}>−</button>
         <button className="btn sm yellow" onClick={resetView} style={{ padding: '4px 8px', fontSize: 11 }}>↺</button>
       </div>
       <div style={{ position: 'absolute', bottom: 10, right: 10, zIndex: 10 }} className="font-mono">
-        <span className="sticker">scroll = zoom · drag = bouger</span>
+        <span className="sticker">pinch / scroll = zoom · drag = bouger</span>
       </div>
       <svg ref={svgRef} viewBox={`0 0 ${TMAP_W} ${TMAP_H}`} preserveAspectRatio="xMidYMid meet"
            style={{ width: '100%', height: '100%', display: 'block', cursor: dragRef.current ? 'grabbing' : 'grab' }}>
@@ -159,21 +193,11 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
               </g>;
             })}
 
-            {/* Title sticker */}
-            <g transform="translate(70 60) rotate(-5)" style={{ pointerEvents: 'none' }}>
-              <rect x="-8" y="-26" width="280" height="56" fill="#fff200" stroke="#111" strokeWidth="3" rx="4" />
-              <text x="132" y="10" fontFamily="'Bagel Fat One', system-ui" fontSize="30" textAnchor="middle" fill="#111">OUR TRIP MAP</text>
-            </g>
-            <g transform="translate(80 110) rotate(2)" style={{ pointerEvents: 'none' }}>
-              <rect x="-4" y="-16" width="240" height="32" fill="#ff3ea5" stroke="#111" strokeWidth="3" rx="4" />
-              <text x="116" y="8" fontFamily="'Zen Maru Gothic', system-ui" fontSize="20" fontWeight="900" textAnchor="middle" fill="#fff">日本旅行ルート</text>
-            </g>
-
             {!paths && !err && (
-              <text x="500" y="350" textAnchor="middle" fontFamily="'DotGothic16', monospace" fontSize="18" fill="#111">// loading map...</text>
+              <text x={TMAP_W/2} y={TMAP_H/2} textAnchor="middle" fontFamily="'DotGothic16', monospace" fontSize="18" fill="#111">// loading map...</text>
             )}
             {err && (
-              <text x="500" y="350" textAnchor="middle" fontFamily="'DotGothic16', monospace" fontSize="14" fill="#ff3ea5">// {err}</text>
+              <text x={TMAP_W/2} y={TMAP_H/2} textAnchor="middle" fontFamily="'DotGothic16', monospace" fontSize="14" fill="#ff3ea5">// {err}</text>
             )}
 
             {/* Country shadow */}
@@ -182,10 +206,8 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
             ))}
             {/* Country fills with tier */}
             {paths && paths.map((p, i) => {
-              const fill = p.tier === 'hl' ? '#ffe9b3' : p.tier === 'ctx' ? '#fff5d9' : '#f5efde';
-              const stroke = p.tier === 'far' ? '#9c8' : '#111';
-              const sw = p.tier === 'far' ? 0.6 : 1.4;
-              return <path key={'p-' + i} d={p.d} fill={fill} stroke={stroke} strokeWidth={sw} strokeLinejoin="round" />;
+              const fill = p.tier === 'hl' ? '#ffe9b3' : '#fff5d9';
+              return <path key={'p-' + i} d={p.d} fill={fill} stroke="#111" strokeWidth={1.4} strokeLinejoin="round" />;
             })}
 
             {/* Highlight outline on trip prefectures */}
@@ -258,6 +280,16 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
 
           </g>
         </g>
+        {/* Title stickers — fixes, hors zoom, en surcouche pour ne pas être masqués par le pays */}
+        <g transform="translate(30 760) rotate(-5)" style={{ pointerEvents: 'none' }}>
+          <rect x="-8" y="-26" width="240" height="50" fill="#fff200" stroke="#111" strokeWidth="3" rx="4" />
+          <text x="112" y="8" fontFamily="'Bagel Fat One', system-ui" fontSize="26" textAnchor="middle" fill="#111">OUR TRIP MAP</text>
+        </g>
+        <g transform="translate(40 810) rotate(2)" style={{ pointerEvents: 'none' }}>
+          <rect x="-4" y="-15" width="210" height="28" fill="#ff3ea5" stroke="#111" strokeWidth="3" rx="4" />
+          <text x="101" y="6" fontFamily="'Zen Maru Gothic', system-ui" fontSize="17" fontWeight="900" textAnchor="middle" fill="#fff">日本旅行ルート</text>
+        </g>
+
         {/* Compass — fixe, hors zoom */}
         <g transform="translate(60 95)" style={{ pointerEvents: 'none' }}>
           <circle r="22" fill="#fff" stroke="#111" strokeWidth="2.5" />

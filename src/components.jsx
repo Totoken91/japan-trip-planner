@@ -138,7 +138,7 @@ export function ProjectModal({ p, city, cat, onClose, onUpdate, onDelete, photos
             value={draft.name}
             onChange={e=>save({name: e.target.value})}
             className="font-display"
-            style={{fontSize:30, lineHeight:1.05, color:'#fff', WebkitTextStroke:'2px var(--ink)',
+            style={{fontSize:'clamp(20px, 6vw, 30px)', lineHeight:1.05, color:'#fff', WebkitTextStroke:'2px var(--ink)',
               background:'transparent', border:'none', outline:'none', width:'100%', fontFamily:'Bagel Fat One, system-ui'}}
           />
           {draft.nameJp && <div className="font-jp" style={{fontSize:18, marginTop:4}}>{draft.nameJp}</div>}

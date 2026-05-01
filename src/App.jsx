@@ -183,7 +183,7 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{display:'flex', gap:8, alignItems:'center', flex: '1 1 320px', minWidth: 280, maxWidth: 480, position:'relative'}}>
+          <div style={{display:'flex', gap:8, alignItems:'center', flex: '1 1 200px', minWidth: 0, maxWidth: 480, position:'relative'}}>
             <span style={{position:'absolute', left: 12, top: '50%', transform:'translateY(-50%)', fontSize:18, zIndex:1, pointerEvents:'none'}}>🔍</span>
             <input
               value={search}
@@ -245,7 +245,7 @@ export default function App() {
 
         {view === 'map' && (
           <div style={{display:'grid', gridTemplateColumns:'minmax(0, 1fr) 320px', gap:20}} className="map-grid">
-            <div className="card" style={{padding:8, position:'relative', minHeight: 600}}>
+            <div className="card" style={{padding:8, position:'relative'}}>
               <TripMap projects={projects} cities={CITIES} itinerary={itinerary}
                 onPickCity={onPickCity}
                 hoveredCity={hoveredCity} setHoveredCity={setHoveredCity}
@@ -323,7 +323,7 @@ export default function App() {
                       <div style={{flex:1, minWidth: 200}}>
                         <span className="sticker ink">ÉTAPE {c.segment}</span>
                         <div className="font-jp" style={{fontSize:24, color:'#fff', WebkitTextStroke:'2px var(--ink)', marginTop:4, lineHeight:1}}>{c.nameJp}</div>
-                        <div className="font-display" style={{fontSize:38, color:'#fff', WebkitTextStroke:'2px var(--ink)', lineHeight:1}}>{c.name}</div>
+                        <div className="font-display" style={{fontSize:'clamp(24px, 7vw, 38px)', color:'#fff', WebkitTextStroke:'2px var(--ink)', lineHeight:1}}>{c.name}</div>
                         <div className="font-mono" style={{fontSize:12, marginTop:4}}>{c.suggestedDays} · {it.nights} nuits</div>
                       </div>
                       <div className="card" style={{padding:10, minWidth:160, background:'#fff'}}>
