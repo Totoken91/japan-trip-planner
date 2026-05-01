@@ -294,9 +294,11 @@ body[data-anim="off"] *, body[data-anim="off"] *::before, body[data-anim="off"] 
 .slide-in { animation: slide-in-up .4s cubic-bezier(.3,1.4,.5,1) both; }
 
 /* TripMap : pendant un drag/pinch, désactiver la transition pour éviter le retard
-   visuel des pins, et passer le curseur en grabbing. */
+   visuel des pins, et passer le curseur en grabbing.
+   pointer-events:none sur les pins coupe les mouseEnter/Leave qui sinon
+   déclencheraient des re-renders React parasites. */
 .trip-map-wrapper.dragging svg { cursor: grabbing !important; }
-.trip-map-wrapper.dragging .trip-pin { transition: none !important; }
+.trip-map-wrapper.dragging .trip-pin { transition: none !important; pointer-events: none; }
 
 /* ───────── Mobile (≤ 640px) ───────── */
 @media (max-width: 640px) {

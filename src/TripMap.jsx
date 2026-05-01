@@ -14,7 +14,7 @@ const TRIP_HIGHLIGHT = new Set([13, 19, 20, 17, 26]);
 // Okinawa exclu pour ne pas tirer le cadrage trop au sud
 const SKIP_PREF = new Set([47]);
 
-const TMAP_W = 1000, TMAP_H = 900;
+const TMAP_W = 800, TMAP_H = 900;
 
 export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, setHoveredCity, animations }) {
   const [paths, setPaths] = useState(null);
@@ -83,11 +83,25 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
       wheelTimer = setTimeout(() => setZoom(liveRef.current.zoom), 180);
     };
 
+    let isDragging = false;  // n'active la classe + pause SMIL qu'après mouvement réel
+    const enterDragMode = () => {
+      if (isDragging) return;
+      isDragging = true;
+      el.classList.add('dragging');
+      // Geler les animations SMIL (halos pulsants + route shimmer) pour libérer le compositor
+      try { svgRef.current?.pauseAnimations?.(); } catch {}
+    };
+    const exitDragMode = () => {
+      if (!isDragging) return;
+      isDragging = false;
+      el.classList.remove('dragging');
+      try { svgRef.current?.unpauseAnimations?.(); } catch {}
+    };
+
     const onPointerDown = (e) => {
       if (e.target.closest('button, [data-no-pan]')) return;
       el.setPointerCapture(e.pointerId);
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      el.classList.add('dragging');
       if (pointers.size === 1) {
         dragStart = { x: e.clientX, y: e.clientY, panX: liveRef.current.pan.x, panY: liveRef.current.pan.y };
         pinch = null;
@@ -95,6 +109,7 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
         const [a, b] = [...pointers.values()];
         pinch = { dist: Math.hypot(a.x - b.x, a.y - b.y), startZoom: liveRef.current.zoom };
         dragStart = null;
+        enterDragMode(); // pinch = drag immédiat
       }
     };
     const onPointerMove = (e) => {
@@ -109,6 +124,9 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
       } else if (pointers.size === 1 && dragStart) {
         const dx = e.clientX - dragStart.x;
         const dy = e.clientY - dragStart.y;
+        // Seuil 5 px : sans ça, simple click déclenche drag → casse le clic sur pin
+        if (!isDragging && Math.hypot(dx, dy) < 5) return;
+        enterDragMode();
         liveRef.current = { ...liveRef.current, pan: { x: dragStart.panX + dx, y: dragStart.panY + dy } };
         applyAll();
       }
@@ -118,7 +136,7 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
       if (pointers.size < 2) pinch = null;
       if (pointers.size === 0) {
         dragStart = null;
-        el.classList.remove('dragging');
+        exitDragMode();
         // Commit final live → React (pour footer "zoom×N" + persistance)
         setZoom(liveRef.current.zoom);
         setPan(liveRef.current.pan);
@@ -212,7 +230,7 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
            position: 'relative', width: '100%',
            aspectRatio: `${TMAP_W} / ${TMAP_H}`,
            maxHeight: 'min(80vh, 820px)',
-           maxWidth: 'calc(min(80vh, 820px) * 1000 / 900)',
+           maxWidth: 'calc(min(80vh, 820px) * 800 / 900)',
            margin: '0 auto',
            touchAction: 'none',
            userSelect: 'none', WebkitUserSelect: 'none',
@@ -243,6 +261,7 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
         <rect width={TMAP_W} height={TMAP_H} fill="url(#tdots)" opacity="0.5" />
         <rect width={TMAP_W} height={TMAP_H} fill="url(#twave)" opacity="0.35" />
         <g ref={innerGRef}
+           style={{ willChange: 'transform' }}
            transform={`translate(${TMAP_W / 2 + pan.x} ${TMAP_H / 2 + pan.y}) scale(${zoom}) translate(${-TMAP_W / 2} ${-TMAP_H / 2})`}>
           <g clipPath="url(#trip-clip)">
 
@@ -263,10 +282,14 @@ export function TripMap({ projects, cities, itinerary, onPickCity, hoveredCity, 
               <text x={TMAP_W/2} y={TMAP_H/2} textAnchor="middle" fontFamily="'DotGothic16', monospace" fontSize="14" fill="#ff3ea5">// {err}</text>
             )}
 
-            {/* Country shadow */}
-            {paths && paths.map((p, i) => (
-              <path key={'sh-' + i} d={p.d} fill="#111" opacity="0.14" transform="translate(4 5)" />
-            ))}
+            {/* Country shadow — 1 seul opacity blend pour les 47 paths */}
+            {paths && (
+              <g opacity="0.14" transform="translate(4 5)">
+                {paths.map((p, i) => (
+                  <path key={'sh-' + i} d={p.d} fill="#111" />
+                ))}
+              </g>
+            )}
             {/* Country fills with tier */}
             {paths && paths.map((p, i) => {
               const fill = p.tier === 'hl' ? '#ffe9b3' : '#fff5d9';
