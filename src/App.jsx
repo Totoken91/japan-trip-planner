@@ -183,7 +183,7 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{display:'flex', gap:8, alignItems:'center', flex: '1 1 200px', minWidth: 0, maxWidth: 480, position:'relative'}}>
+          <div className="header-search" style={{display:'flex', gap:8, alignItems:'center', flex: '1 1 200px', minWidth: 0, maxWidth: 480, position:'relative'}}>
             <span style={{position:'absolute', left: 12, top: '50%', transform:'translateY(-50%)', fontSize:18, zIndex:1, pointerEvents:'none'}}>🔍</span>
             <input
               value={search}
