@@ -246,10 +246,10 @@ export const PROJECTS = [
     notes:'Check-in 6 juin → check-out 8 juin (2 nuits). Suggestions :\n• Dormy Inn Matsumoto (onsen naturel + ramen offert le soir, 10min à pied du château) — option confort/onsen\n• Richmond Hotel Matsumoto (4★ proche château)\n• Tabino Hotel lit Matsumoto (5min station, very bien noté)\nRéserver 2-3 mois avant — Matsumoto est court mais demandé en saison.',
     coords:[36.2330, 137.9720] },
 
-  { id:'p033', city:'matsumoto', cat:'nature', name:'Lac Suwa — inspiration Your Name', nameJp:'諏訪湖',
-    priority:'MUST', status:'TODO', budget:1000, hours:'24/7', booking:false,
+  { id:'p033', city:'matsumoto', cat:'nature', name:'Lac Suwa + Tateishi Park — vue Your Name', nameJp:'諏訪湖・立石公園',
+    priority:'MUST', status:'TODO', budget:0, hours:'24/7', booking:false,
     scheduledDate:'2026-06-06',
-    notes:'L\'inspiration directe du lac Itomori dans Kimi no Na wa (Makoto Shinkai est de Nagano, né à Koumi près de Suwa). À caler en escale 2-3h sur le trajet Kawaguchiko → Matsumoto : descendre à la gare de Kami-Suwa (上諏訪駅) sur la ligne Azusa Limited Express. Options sur place :\n• Promenade côté ville le long de la berge (~1h, gratuit)\n• Tour complet du lac à vélo électrique (~2h, ~¥1000 location à la gare)\n• Bateau-cygne sur le lac (~¥1500)\n⚠ Pour le "kataware-doki" (crépuscule iconique du film), arriver pour le coucher de soleil.',
+    notes:'Escale ~3-4h sur le trajet Kawaguchiko → Matsumoto. Le lac Suwa = inspiration directe d\'Itomori dans Kimi no Na wa (Makoto Shinkai est de Nagano).\n\nPlan : descendre à Kami-Suwa (上諏訪駅), monter à Tateishi Park (立石公園) — la colline qui surplombe le lac, citée comme LE viewpoint du film. ~30-40 min à pied uphill depuis la gare (ou taxi ~¥1500 si on est cassé). Vue panoramique sur l\'ensemble du lac. Gratuit, ouvert 24/7.\n\nIdéal d\'arriver pour le coucher de soleil (le "kataware-doki" iconique). Redescendre à pied (15-20 min downhill) puis Azusa direction Matsumoto.\n\n⚠ Plan B : si on rate le dernier Azusa du soir (vers 21h), pas mal de ryokans à Kami-Suwa Onsen (sources thermales en bord de lac) — on dort sur place et on rejoint Matsumoto le lendemain matin (50 min de train). Ça se réserve sur place le jour même hors weekend.',
     coords:[36.0470, 138.1144] },
 
   { id:'p034', city:'matsumoto', cat:'transport', name:'Resort View Furusato — train scénique Alpes', nameJp:'リゾートビューふるさと',
