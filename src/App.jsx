@@ -57,6 +57,7 @@ export default function App() {
   const [filterCat, setFilterCat] = useState('all');
   const [filterPrio, setFilterPrio] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterBooking, setFilterBooking] = useState(false);
   const [calMonth, setCalMonth] = useState(M - 1);
   const [calYear, setCalYear] = useState(Y);
 
@@ -112,6 +113,7 @@ export default function App() {
       if (filterCat !== 'all' && p.cat !== filterCat) return false;
       if (filterPrio !== 'all' && p.priority !== filterPrio) return false;
       if (filterStatus !== 'all' && p.status !== filterStatus) return false;
+      if (filterBooking && (!p.booking || p.status === 'DONE')) return false;
       if (search) {
         const s = search.toLowerCase();
         const cat = CATEGORIES[p.cat];
@@ -124,7 +126,14 @@ export default function App() {
       }
       return true;
     });
-  }, [projects, currentCity, filterCat, filterPrio, filterStatus, search]);
+  }, [projects, currentCity, filterCat, filterPrio, filterStatus, filterBooking, search]);
+
+  const showBookingList = () => {
+    setFilterBooking(true);
+    setFilterCat('all'); setFilterPrio('all'); setFilterStatus('all');
+    setCurrentCity(null); setSearch('');
+    setView('list');
+  };
 
   const picked = pickedId ? projects.find(p => p.id === pickedId) : null;
   const pickedCity = picked && CITIES[picked.city];
@@ -261,6 +270,11 @@ export default function App() {
             {Object.entries(STATUS_INFO).map(([k,info])=>(
               <button key={k} className={`filter-chip ${filterStatus===k?'active':''}`} onClick={()=>setFilterStatus(k)}>{info.emoji} {info.label}</button>
             ))}
+            <span style={{width:14}}/>
+            <span className="font-mono" style={{fontSize:11, opacity:.6}}>// RÉSERV:</span>
+            <button className={`filter-chip ${!filterBooking?'active':''}`} onClick={()=>setFilterBooking(false)}>tout</button>
+            <button className={`filter-chip ${filterBooking?'active':''}`} onClick={()=>setFilterBooking(true)}
+              style={filterBooking?{background:'var(--pink)', color:'#fff'}:{}}>🎫 à réserver</button>
             <span style={{flex:1}}/>
             <span className="sticker">{filtered.length} projets</span>
           </div>
@@ -304,12 +318,22 @@ export default function App() {
               </div>
 
               {stats.booking > 0 && (
-                <div className="card" style={{padding:14, background:'var(--pink)', color:'#fff', transform:'rotate(-1deg)'}}>
-                  <div className="font-display" style={{fontSize:16, color:'#fff'}}>🎫 À RÉSERVER</div>
-                  <div className="font-mono" style={{fontSize:11, marginTop:6, lineHeight:1.5}}>
-                    {stats.booking} projets nécessitent une réservation. Ne pas oublier (Ghibli museum, Shibuya Sky, ryokan…) !
+                <button onClick={showBookingList} className="card"
+                  style={{padding:14, background:'var(--pink)', color:'#fff', transform:'rotate(-1deg)',
+                          textAlign:'left', cursor:'pointer', fontFamily:'inherit', width:'100%',
+                          border:'3px solid var(--ink)', borderRadius:'var(--radius)',
+                          boxShadow:'var(--shadow)'}}
+                  onMouseDown={e => e.currentTarget.style.boxShadow = '2px 2px 0 var(--ink)'}
+                  onMouseUp={e => e.currentTarget.style.boxShadow = 'var(--shadow)'}
+                  onMouseLeave={e => e.currentTarget.style.boxShadow = 'var(--shadow)'}>
+                  <div className="font-display" style={{fontSize:16, color:'#fff', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                    <span>🎫 À RÉSERVER</span>
+                    <span style={{fontSize:13, opacity:.85}}>voir tout →</span>
                   </div>
-                </div>
+                  <div className="font-mono" style={{fontSize:11, marginTop:6, lineHeight:1.5}}>
+                    {stats.booking} projets nécessitent une réservation. Ghibli, Shibuya Sky, ryokans, Resort View Furusato…
+                  </div>
+                </button>
               )}
 
               <div className="card" style={{padding:14, transform:'rotate(.8deg)'}}>
