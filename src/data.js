@@ -198,11 +198,11 @@ export const PROJECTS = [
     notes:'⚠ RÉSERVATION le 10 du mois précédent à 10:00 JST (3h du mat à Paris) via Lawson Ticket — site requiert un téléphone JP. Pour visite début/mi-juin = ouverture des billets le 10 mai. Alternative pour étrangers : passer par JTB / agences agréées (markup mais quota international garanti, à booker plusieurs mois avant). Sinon : revente épuisée en quelques minutes.',
     coords:[35.6963, 139.5704] },
 
-  { id:'p018', city:'tokyo', cat:'hotel', name:'Hôtel Tokyo (Shinjuku/Shibuya) — TBD', nameJp:'東京ホテル',
+  { id:'p018', city:'tokyo', cat:'hotel', name:'Sheath Okachimachi Apartment Hotel ✓', nameJp:'シース御徒町',
     priority:'MUST', status:'TODO', budget:120000, hours:'check-in 15:00', booking:true,
     scheduledDate:'2026-05-27',
-    notes:'Check-in 27 mai → check-out 4 juin (8 nuits, ~¥15k/nuit pour 2). Préférer Shinjuku/Shibuya/Shin-Okubo pour Yamanote + accès aéroport. Suggestions :\n• Hotel Gracery Shinjuku (immeuble Godzilla, Kabukicho, ~$155/nuit)\n• JR Kyushu Hotel Blossom Shinjuku (1min station, prix raisonnable)\n• Sotetsu Fresa Inn Higashi Shinjuku (Kabukicho, petit-déj inclus)\n• Best Hotel (Shin-Okubo, value)\nAlternatives moins chères : Ueno, Akihabara, Gotanda (sur Yamanote).',
-    coords:[35.6938, 139.7036] },
+    notes:'CHOIX VALIDÉ — réservation en cours (Booking.com).\n• Score 8.9 · 3★ · réduction Genius -€175 · taxi aéroport gratuit\n• Apartment hotel (kitchenette + salon séparé) — top pour 8 nuits\n• Quartier Okachimachi/Kojima (Taito-ku, shitamachi) — vibe vieux Tokyo\n• Yamanote à Okachimachi, Akihabara à 10 min à pied, Asakusa à 1 station\n⚠ Vérifier que les dates Booking matchent le vol : itin = 27 mai → 4 juin (8 nuits). Si Booking propose 28 mai → 5 juin (8 nuits aussi mais décalé), ajuster soit le booking soit l\'itinéraire selon l\'heure d\'arrivée à Haneda/Narita.',
+    coords:[35.7050, 139.7740] },
 
   { id:'p019', city:'tokyo', cat:'temple', name:'Suga Shrine — escalier Your Name', nameJp:'須賀神社',
     priority:'MUST', status:'TODO', budget:0, hours:'24/7',
