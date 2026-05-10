@@ -39,9 +39,10 @@ const ITINERARY = ACTIVE_TRIP.itinerary;
 const PROJECTS = ACTIVE_TRIP.projects;
 
 // Clés localStorage scopées au trip pour ne pas mélanger les édits Honshu/Okinawa.
-const LS_PROJECTS = `jtp_projects_${tripId}_v1`;
-const LS_PHOTOS = `jtp_photos_${tripId}_v1`;
-const LS_ITIN = `jtp_itin_${tripId}_v1`;
+// Bump de version pour forcer le refresh des défauts quand data.js change significativement.
+const LS_PROJECTS = `jtp_projects_${tripId}_v2`;
+const LS_PHOTOS = `jtp_photos_${tripId}_v2`;
+const LS_ITIN = `jtp_itin_${tripId}_v2`;
 
 const [Y, M] = TRIP.startDate.split('-').map(Number);
 
